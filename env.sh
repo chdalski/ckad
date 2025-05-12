@@ -3,11 +3,15 @@
 # used to list files in the current directory
 alias l='ls -lisa'
 
-# used in kubectl create / run commands with $dry (i. e. kubectl create ... $dry > resource.yml
-alias dry='--dry-run=client -o yaml'
+# used in kubectl create / run commands with $dry (i. e. kubectl create ... $DYAML > resource.yml
+DYAML='--dry-run=client -o yaml'
+DJSON='--dry-run=client -o json'
+export DYAML
+export DJSON
 
-# destroy resources instandly (i. e. kubectl delete -f resource.yml $now)
-alias now='--grace-period 0 --force'
+# destroy resources instandly (i. e. kubectl delete -f resource.yml $force)
+FORCE='--grace-period 0 --force'
+export FORCE
 
 # set default namespace
 sdn() { kubectl config set-context --current --namespace="$1" ; }
