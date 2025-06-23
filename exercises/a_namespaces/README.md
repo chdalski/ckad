@@ -75,8 +75,50 @@ k get ns -o name > all-namespaces.txt
 
 ## Task 7
 
-TODO: resource quota
+Create a ResourceQuota called `berry-quota` for namespace `blueberry` with a hard quota of 2 cpus, 3 pods and 2G of memory.
+
+_Optionally:_ describe the namespace to see the quota in place.
+
+<details><summary>help</summary>
+
+```bash
+k create quota berry-quota --hard cpu=2,pods=3,memory=2G -n blueberry
+```
+
+</details>
 
 ## Task 8
 
-TODO: LimitRange
+Create a LimitRange in namespace `sunshine` called `cpu-limit` with a minimum cpu setting of 100m, a maximum cpu setting of 1 cpu, a default cpu setting of 200m and a default cpu-request setting of 100m. All settings should be applied per container.
+
+_Optionally:_ describe the namespace to see the limits in place.
+
+<details><summary>help</summary>
+
+Create a yaml file:
+
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-limit
+spec:
+  limits:
+  - type: Container
+    max:
+      cpu: "1" # define the max cpu limit
+    min:
+      cpu: 100m # define the min cpu limit
+    default:
+      cpu: 200m # define the default cpu limit
+    defaultRequest:
+      cpu: 100m # define the default cpu request
+```
+
+Apply the file (don't forget the namespace):
+
+```shell
+k apply -f <filename> -n sunshine
+```
+
+</details>

@@ -1,7 +1,7 @@
 minikube.log
 
 # ckad exercises
-/ckad-exercises/**/*.*
-!ckad-exercises/**/.env.**
-!ckad-exercises/**/verify.sh
-!ckad-exercises/**/README.md
+/exercises/**/*.*
+!exercises/**/.env.**
+!exercises/**/verify.sh
+!exercises/**/README.md

@@ -1,33 +1,38 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/kubernetes-helm-minikube
 {
-	"name": "Kubernetes - Minikube-in-Docker",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"moby": false,
-			"installDockerBuildx": true
-		},
-		"ghcr.io/devcontainers-extra/features/kind:1": {},
-		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-			"version": "latest",
-			"helm": "latest",
-			"minikube": "latest"
-		}
-	},
-	"mounts": [
-		{
-			"source": "${localWorkspaceFolder}/.env/.bashrc",
-			"target": "/home/vscode/.bashrc",
-			"type": "bind"
-		},
-		{
-			"source": "${localWorkspaceFolder}/.env/.vimrc",
-			"target": "/home/vscode/.vimrc",
-			"type": "bind"
-		}
-	],
-	"onCreateCommand": "sudo apt update && sudo apt install -y vim git && [[ -d /home/vscode/.autoenv ]] || git clone 'https://github.com/hyperupcall/autoenv' /home/vscode/.autoenv"
-	// "postStartCommand": "nohup bash -c 'kind create cluster --config kind-cluster-config.yaml &' > kind.log 2>&1"
+  "name": "Kubernetes - Minikube-in-Docker",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "installDockerBuildx": true
+    },
+    "ghcr.io/devcontainers-extra/features/kind:1": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "latest"
+    }
+  },
+  "mounts": [
+    {
+      "source": "${localWorkspaceFolder}/.env/.bashrc",
+      "target": "/home/vscode/.bashrc",
+      "type": "bind"
+    },
+    {
+      "source": "${localWorkspaceFolder}/.env/.vimrc",
+      "target": "/home/vscode/.vimrc",
+      "type": "bind"
+    }
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "editorconfig.editorconfig",
+        "DavidAnson.vscode-markdownlint",
+        "timonwong.shellcheck"
+      ]
+    }
+  },
+  "onCreateCommand": "sudo apt update && sudo apt install -y vim git shellcheck && [[ -d /home/vscode/.autoenv ]] || git clone 'https://github.com/hyperupcall/autoenv' /home/vscode/.autoenv"
 }
