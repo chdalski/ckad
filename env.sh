@@ -20,7 +20,7 @@ sdn() { kubectl config set-context --current --namespace="$1" ; }
 rdn() { kubectl config set-context --current --namespace=default ; }
 
 # organize files per question
-mkcd() { mkdir -p "$@" && cd "$@" ; }
+mkcd() { mkdir -p "$@" && cd "$@" || exit ; }
 
 # create/destroy from yaml faster
 alias kaf='k apply -f'
