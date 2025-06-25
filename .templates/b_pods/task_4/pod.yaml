@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: envpod
+spec:
+  containers:
+  - name: ckadenv
+    image: nginx
+    env:
+    - name: CKAD
+      value: task4
+

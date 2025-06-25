@@ -3,6 +3,12 @@ kind: Cluster
 name: ckad
 nodes:
 - role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      extraArgs:
+        event-ttl: "8h0m0s"
   extraPortMappings:
   - containerPort: 30000
     hostPort: 30000

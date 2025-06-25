@@ -6,5 +6,8 @@
         "summary"
       ]
     }
-  }
+  },
+  "shellcheck.customArgs": [
+    "--external-sources"
+  ]
 }
