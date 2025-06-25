@@ -7,8 +7,8 @@ Create a namespace called `webapp` and create a pod `nginx` with image `nginx` i
 <details><summary>help</summary>
 
 ```bash
-k create ns webapp
-k run nginx --image nginx -n webapp
+k create ns task1
+k run nginx --image nginx -n task1
 ```
 
 </details>
