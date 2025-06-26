@@ -135,7 +135,7 @@ verify_task8() {
   local namespace="sunshine"
 
   local result
-  result=$(kubectl apply -f "$(git rev-parse --show-toplevel)/.templates/a_namespaces/task_8/limits.yaml" -n ${namespace} 2> /dev/null)
+  result=$(kubectl apply -f "$(git rev-parse --show-toplevel)/.templates/a_namespaces/task8/limits.yaml" -n ${namespace} 2> /dev/null)
   if  echo "$result" | grep -qi unchanged; then
     solved
   else

@@ -211,6 +211,123 @@ k apply -f t7pod.yaml
 
 </details>
 
+## Task 8
+
+In namespace `task8` is a pod called `liveness-exec`.
+The pod restarts because of a wrong liveness probe.
+Fix the liveness probe and redeploy the container.
+
+<details><summary>help</summary>
+
+Extract the yaml definition of the pod to a file.
+
+```bash
+k get -n task8 pod liveness-exec -o yaml > t8pod.yaml
+```
+
+Delete the current pod from the cluster.
+
+```bash
+k delete -f t8pod.yaml --force
+```
+
+The liveness probe fails because of the pod command `rm -rf /tmp/healthy; sleep 15; touch /tmp/healthy; sleep 7200`.
+The script sleeps for 15 seconds before the file `/tmp/healthy` is created.
+Therefore the liveness probe fails.
+
+Update the liveness probe in the yaml file (snippet):
+
+```yaml
+# ...
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      failureThreshold: 1
+      initialDelaySeconds: 15 # example solution
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 1
+# ...
+```
+
+__Note:__
+There a multiple ways to fix the probe.
+
+- you could increase the failure threshold
+- you could increase the initial delay
+- you could increase the period
+- or a mix of these
+
+Redeploy the pod.
+
+```shell
+k apply -f t8pod.yaml
+```
+
+</details>
+
+## Task 9
+
+Create a pod called `nginx-health` with image `nginx:1.21`.
+Mount all files of the config map `nginx-health` to path `/etc/nginx.conf.d`.
+Also create a readiness probe to check path `/healthz` on port `80` after an initial delay of `3` seconds.
+The probe should be run every `5` seconds.
+
+<details><summary>help</summary>
+
+Create the yaml file (i. e. `t9pod.yaml`).
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-health
+spec:
+  containers:
+  - image: nginx:1.21
+    name: nginx-health
+    volumeMounts:
+    - name: config-vol
+      mountPath: "/etc/nginx/conf.d"
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: 80
+      initialDelaySeconds: 3
+      periodSeconds: 5
+  dnsPolicy: ClusterFirst
+  volumes:
+  - name: config-vol
+    configMap:
+      name: nginx-health
+```
+
+Apply the yaml file (i. e. `t9pod.yaml`).
+
+```bash
+k apply -f t9pod.yaml
+```
+
+</details>
+
+## Task 10
+
+In namespace `task10` is a failed pod.
+Identify and fix the issue without deleting the pod.
+
+<details><summary>help</summary>
+
+The pod fails because of a typo in the image tag.
+Update the tag in place using the `kubectl edit` command.
+
+```bash
+k edit -n task10 po help-me
+```
+
+</details>
+
 ## TODO
 
 - resource limits

@@ -120,7 +120,7 @@ verify_task4() {
   TASKNAME="Task 4"
 
   local result
-  result=$(kubectl apply -f "$(git rev-parse --show-toplevel)/.templates/b_pods/task_4/pod.yaml" --dry-run=server 2> /dev/null)
+  result=$(kubectl apply -f "$(git rev-parse --show-toplevel)/.templates/b_pods/task4/pod.yaml" --dry-run=server 2> /dev/null)
   if  echo "$result" | grep -qi unchanged; then
     solved
   else
@@ -299,6 +299,148 @@ verify_task7() {
   return 0
 }
 
+verify_task8() {
+  TASKNAME="Task 8"
+  local namespace="task8"
+  local pod_name="liveness-exec"
+  local cmd_expected=("/bin/sh" "-c" "rm -rf /tmp/healthy; sleep 15; touch /tmp/healthy; sleep 7200")
+  local pod_age_threshold=15
+  local initial_default=5
+  local period_default=5
+  local failure_threshold_default=1
+
+  # Verify Restart Count is Zero and Retrieve Pod Data
+  local pod_json
+  pod_json=$(kubectl get pod "$pod_name" -n "$namespace" -o=json 2>/dev/null)
+  if [[ -z "$pod_json" ]]; then
+    failed
+    return
+  fi
+
+  # Extract fields from pod JSON
+  local restart_count
+  restart_count=$(echo "$pod_json" | jq -r '.status.containerStatuses[0].restartCount')
+  if [[ "$restart_count" -ne 0 ]]; then
+    failed
+    return
+  fi
+
+  # Check Pod Age
+  local pod_start_time
+  local pod_age
+  pod_start_time=$(echo "$pod_json" | jq -r '.status.startTime')
+  pod_age=$(( $(date +%s) - $(date -d "$pod_start_time" +%s) ))
+  if [[ "$pod_age" -lt "$pod_age_threshold" ]]; then
+    failed
+    return
+  fi
+
+  # Verify Pod Command/Args
+  local cmd_actual
+  cmd_actual=$(echo "$pod_json" | jq -r '.spec.containers[0].args | join(" ")')
+  if [[ "$cmd_actual" != "${cmd_expected[*]}" ]]; then
+    failed
+    return
+  fi
+
+  # Verify Liveness Probe Configuration Has Been Changed
+  local initial_delay
+  local period
+  local failure_threshold
+  initial_delay=$(echo "$pod_json" | jq -r '.spec.containers[0].livenessProbe.initialDelaySeconds')
+  period=$(echo "$pod_json" | jq -r '.spec.containers[0].livenessProbe.periodSeconds')
+  failure_threshold=$(echo "$pod_json" | jq -r '.spec.containers[0].livenessProbe.failureThreshold')
+  if [[ "$initial_delay" -eq "$initial_default" ]] && \
+     [[ "$period" -eq "$period_default" ]] && \
+     [[ "$failure_threshold" -eq "$failure_threshold_default" ]]; then
+    failed
+    return
+  fi
+
+  solved
+  return
+}
+
+verify_task9() {
+  TASKNAME="Task 9"
+  local pod_name="nginx-health"
+  local namespace="default"
+
+  # Check if the Pod exists
+  if ! kubectl get pod "$pod_name" -n "$namespace" > /dev/null 2>&1; then
+    failed
+    return
+  fi
+
+  # Extract the JSON definition of the pod
+  local pod_json
+  pod_json=$(kubectl get pod "$pod_name" -n "$namespace" -o json)
+
+  # Verify the container image
+  local container_image
+  container_image=$(echo "$pod_json" | jq -r '.spec.containers[0].image')
+  if [[ "$container_image" != "nginx:1.21" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the mounted ConfigMap
+  local mounted_config
+  mounted_config=$(echo "$pod_json" | jq -r '.spec.volumes[] | select(.configMap.name == "nginx-health") | .configMap.name')
+  if [[ "$mounted_config" != "nginx-health" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the readiness probe path, port, and timing
+  local readiness_path
+  readiness_path=$(echo "$pod_json" | jq -r '.spec.containers[0].readinessProbe.httpGet.path')
+  local readiness_port
+  readiness_port=$(echo "$pod_json" | jq -r '.spec.containers[0].readinessProbe.httpGet.port')
+  local readiness_initial_delay
+  readiness_initial_delay=$(echo "$pod_json" | jq -r '.spec.containers[0].readinessProbe.initialDelaySeconds')
+  local readiness_period
+  readiness_period=$(echo "$pod_json" | jq -r '.spec.containers[0].readinessProbe.periodSeconds')
+
+  if [[ "$readiness_path" != "/healthz" ]] || [[ "$readiness_port" != "80" ]]; then
+    failed
+    return
+  fi
+
+  if [[ "$readiness_initial_delay" -ne 3 ]] || [[ "$readiness_period" -ne 5 ]]; then
+    failed
+    return
+  fi
+
+  solved
+  return
+}
+
+function verify_task10 {
+  TASKNAME="Task 10"
+  local namespace="task10"
+  local pod_name="help-me"
+
+  # Check the pod status
+  local pod_status
+  pod_status=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath='{.status.phase}')
+  if [ "$pod_status" != "Running" ]; then
+    failed
+    return
+  fi
+
+  # Check the image
+  local image
+  image=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath='{.spec.containers[0].image}')
+  if [[ "$image" != nginx:* ]]; then
+    failed
+    return
+  fi
+
+  solved
+  return
+}
+
 verify_task1
 verify_task2
 verify_task3
@@ -306,4 +448,7 @@ verify_task4
 verify_task5
 verify_task6
 verify_task7
+verify_task8
+verify_task9
+verify_task10
 exit 0
