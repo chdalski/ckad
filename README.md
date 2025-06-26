@@ -1,6 +1,6 @@
 # CKAD Exam Preparation
 
-The repository provides exercises to prepare yourself for the Certifite Kubernetes Application Developer (CKAD) Exam.
+The repository provides exercises to prepare you for the Certified Kubernetes Application Developer (CKAD) Exam.
 
 ## Prerequisites
 
