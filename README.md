@@ -23,7 +23,7 @@ When VS Code is ready the workflow to use the exercises is always the same:
 - Navigate to the exercise directory in a terminal window (i. e. `cd ./exercises/a_namespaces`)
   - This might take a moment because a new cluster is created for every exercise.
 - Open up the exercise _README.md_ file as __preview__ (right click -> `Open Preview`)
-- Use the `verify.sh` script in the exercise folder to check your success
+- Use the `verify.sh` script in the exercise folder to check your success (call it with `./verify.sh` in your terminal)
   - This always checks all tasks but can be used whenever you want
 
 __Note:__
@@ -54,7 +54,7 @@ You can also use the DevContainer CLI, other IDEs or Editors that support DevCon
 
 ## Exam helper snippets
 
-These might be usefull to learn and use during the exam:
+These might be useful to learn and use during the exam:
 
 ```shell
 #!/bin/sh

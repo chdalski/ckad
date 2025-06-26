@@ -5,78 +5,95 @@ source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
 verify_task1() {
   TASKNAME="Task 1"
-  local NAMESPACE="task1"
-  local POD_NAME="nginx"
+  local namespace="task1"
+  local pod_name="nginx"
 
-  STATUS_PHASE=$(kubectl get pods "$POD_NAME" -o jsonpath="{.status.phase}" -n "$NAMESPACE" 2>/dev/null)
-  IMAGE=$(kubectl get pods "$POD_NAME" -o jsonpath="{.spec.containers[0].image}" -n "$NAMESPACE" 2>/dev/null)
-  if [ "$STATUS_PHASE" == "Running" ] && [ "$IMAGE" == "nginx:1.21" ]; then
-    solved
-  else
-    failed
-  fi
-}
-
-verify_task2() {
-  TASKNAME="Task 2"
-  local NAMESPACE="task2"
-  local POD_NAME="nginx"
-  local IMAGE="nginx:1.21"
-  local LABEL_KEY="exposed"
-  local LABEL_VALUE="true"
-  local PORT=80
-  local SERVICE_NAME="nginx"
-
-  # Check if the Pod exists
-  if ! kubectl get pod "$POD_NAME" -n "$NAMESPACE" &>/dev/null; then
-    failed
-    return
-  fi
-
-  # Check the Pod status (should be "Running")
-  POD_STATUS=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.status.phase}')
-  if [[ "$POD_STATUS" != "Running" ]]; then
+  # Check if the pod is running
+  local status_phase
+  status_phase=$(kubectl get pods "$pod_name" -o jsonpath="{.status.phase}" -n "$namespace" 2>/dev/null)
+  if [ "$status_phase" != "Running" ]; then
     failed
     return
   fi
 
   # Check the image of the container
-  POD_IMAGE=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.containers[0].image}')
-  if [[ "$POD_IMAGE" != "$IMAGE" ]]; then
+  local image
+  image=$(kubectl get pods "$pod_name" -o jsonpath="{.spec.containers[0].image}" -n "$namespace" 2>/dev/null)
+  if [ "$image" != "nginx:1.21" ]; then
+    failed
+    return
+  fi
+
+  solved
+  return
+}
+
+verify_task2() {
+  TASKNAME="Task 2"
+  local namespace="task2"
+  local pod_name="nginx"
+  local image="nginx:1.21"
+  local label_key="exposed"
+  local label_value="true"
+  local port=80
+  local service_name="nginx"
+
+  # Check if the Pod exists
+  if ! kubectl get pod "$pod_name" -n "$namespace" &>/dev/null; then
+    failed
+    return
+  fi
+
+  # Check the Pod status (should be "Running")
+  local pod_status
+  pod_status=$(kubectl get pod "$pod_name" -n "$namespace" -o jsonpath='{.status.phase}')
+  if [[ "$pod_status" != "Running" ]]; then
+    failed
+    return
+  fi
+
+  # Check the image of the container
+  local pod_image
+  pod_image=$(kubectl get pod "$pod_name" -n "$namespace" -o jsonpath='{.spec.containers[0].image}')
+  if [[ "$pod_image" != "$image" ]]; then
     failed
     return
   fi
 
   # Check if the Pod has the correct label
-  POD_LABEL=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath="{.metadata.labels.$LABEL_KEY}")
-  if [[ "$POD_LABEL" != "$LABEL_VALUE" ]]; then
+  local pod_label
+  pod_label=$(kubectl get pod "$pod_name" -n "$namespace" -o jsonpath="{.metadata.labels.$label_key}")
+  if [[ "$pod_label" != "$label_value" ]]; then
     failed
     return
   fi
 
   # Check if the Pod exposes the correct container port
-  CONTAINER_PORT=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.containers[0].ports[0].containerPort}')
-  if [[ "$CONTAINER_PORT" != "$PORT" ]]; then
+  local container_port
+  container_port=$(kubectl get pod "$pod_name" -n "$namespace" -o jsonpath='{.spec.containers[0].ports[0].containerPort}')
+  if [[ "$container_port" != "$port" ]]; then
     failed
     return
   fi
 
   # Check if the Service exists
-  if ! kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" &>/dev/null; then
+  if ! kubectl get svc "$service_name" -n "$namespace" &>/dev/null; then
     failed
     return
   fi
 
   # Check if the Service targets the correct Pod by the same name (selector)
-  SERVICE_SELECTOR=$(kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.selector.exposed}')
-  if [[ "$SERVICE_SELECTOR" != "$LABEL_VALUE" ]]; then
+  local service_selector
+  service_selector=$(kubectl get svc "$service_name" -n "$namespace" -o jsonpath='{.spec.selector.exposed}')
+  if [[ "$service_selector" != "$label_value" ]]; then
     failed
     return
   fi
 
   # Check if the Service exposes the correct port
-  SERVICE_PORT=$(kubectl get svc "$SERVICE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}')
-  if [[ "$SERVICE_PORT" != "$PORT" ]]; then
+  local service_port
+  service_port=$(kubectl get svc "$service_name" -n "$namespace" -o jsonpath='{.spec.ports[0].port}')
+  if [[ "$service_port" != "$port" ]]; then
     failed
     return
   fi
@@ -87,10 +104,12 @@ verify_task2() {
 
 verify_task3() {
   TASKNAME="Task 3"
-  FILE="busybox-env.txt"
+  local file="busybox-env.txt"
+
+  # Check the container image, the pod name and the automatic removal of the pod
   if kubectl get events -n default 2>/dev/null | grep -q 'pod/busybox' && \
      kubectl get events -n default 2>/dev/null | grep -q 'image "busybox:1.37.0"' && \
-     [[ "$(tail -1 < "${FILE}" 2>/dev/null)" == 'pod "busybox" deleted' ]]; then
+     [[ "$(tail -1 < "${file}" 2>/dev/null)" == 'pod "busybox" deleted' ]]; then
     solved
   else
     failed
@@ -99,9 +118,10 @@ verify_task3() {
 
 verify_task4() {
   TASKNAME="Task 4"
-  TEMPLATE_DIR="$(git rev-parse --show-toplevel)/.templates/b_pods/task_4"
-  ACTUAL=$(kubectl apply -f "${TEMPLATE_DIR}/pod.yaml --dry-run=server" 2> /dev/null)
-  if  echo "$ACTUAL" | grep -qi unchanged; then
+
+  local result
+  result=$(kubectl apply -f "$(git rev-parse --show-toplevel)/.templates/b_pods/task_4/pod.yaml" --dry-run=server 2> /dev/null)
+  if  echo "$result" | grep -qi unchanged; then
     solved
   else
     failed
@@ -110,44 +130,45 @@ verify_task4() {
 
 verify_task5() {
   TASKNAME="Task 5"
-  local POD_NAME="task5-app"
-  local CONTAINER_NAME="busybox"
-  local IMAGE_NAME="busybox"
-  local CONFIG_MAP_NAME="app-config"
-  local RESTART_POLICY="Always"
-  local COMMAND='["/bin/sh","-c","sleep 7200"]'
+  local pod_name="task5-app"
+  local container_name="busybox"
+  local image_name="busybox"
+  local config_map_name="app-config"
+  local restart_policy="Always"
+  local command='["/bin/sh","-c","sleep 7200"]'
 
-  # Verify container name
-  CONTAINER=$(kubectl get pod "$POD_NAME" -o jsonpath='{.spec.containers[0].name}' 2>/dev/null)
-  if [ "$CONTAINER" != "$CONTAINER_NAME" ]; then
+  # Check the container name
+  local container_name_found
+  container_name_found=$(kubectl get pod "$pod_name" -o jsonpath='{.spec.containers[0].name}' 2>/dev/null)
+  if [ "$container_name_found" != "$container_name" ]; then
     failed
     return
   fi
 
-  # Verify container image
-  CONTAINER_IMAGE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.spec.containers[0].image}')
-  if [ "$CONTAINER_IMAGE" != "$IMAGE_NAME" ]; then
+  # Check the container image
+  container_image=$(kubectl get pod "$pod_name" -o jsonpath='{.spec.containers[0].image}')
+  if [ "$container_image" != "$image_name" ]; then
     failed
     return
   fi
 
   # Verify the environment variables are loaded from the ConfigMap
-  ENV_SOURCE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.spec.containers[0].envFrom[0].configMapRef.name}')
-  if [ "$ENV_SOURCE" != "$CONFIG_MAP_NAME" ]; then
+  env_source=$(kubectl get pod "$pod_name" -o jsonpath='{.spec.containers[0].envFrom[0].configMapRef.name}')
+  if [ "$env_source" != "$config_map_name" ]; then
     failed
     return
   fi
 
   # Verify the restart policy
-  POLICY=$(kubectl get pod "$POD_NAME" -o jsonpath='{.spec.restartPolicy}')
-  if [ "$POLICY" != "$RESTART_POLICY" ]; then
+  policy=$(kubectl get pod "$pod_name" -o jsonpath='{.spec.restartPolicy}')
+  if [ "$policy" != "$restart_policy" ]; then
     failed
     return
   fi
 
   # Verify the command
-  CMD=$(kubectl get pod "$POD_NAME" -o jsonpath='{.spec.containers[0].command}')
-  if [[ "$CMD" != "$COMMAND" ]]; then
+  cmd=$(kubectl get pod "$pod_name" -o jsonpath='{.spec.containers[0].command}')
+  if [[ "$cmd" != "$command" ]]; then
     failed
     return
   fi
@@ -174,6 +195,7 @@ verify_task6() {
   fi
 
   # Check if init container exists with the correct image
+  local init_image_found
   init_image_found=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath="{.spec.initContainers[?(@.name=='$init_container')].image}")
   if [[ "$init_image_found" != "$init_image" ]]; then
     failed
@@ -181,6 +203,7 @@ verify_task6() {
   fi
 
   # Check if main container exists with the correct image
+  local main_image_found
   main_image_found=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath="{.spec.containers[?(@.name=='$main_container')].image}")
   if [[ "$main_image_found" != "$main_image" ]]; then
     failed
@@ -188,6 +211,7 @@ verify_task6() {
   fi
 
   # Check if the shared volume is mounted in the init container
+  local init_volume_mount
   init_volume_mount=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath="{.spec.initContainers[?(@.name=='$init_container')].volumeMounts[?(@.name=='$shared_volume')].mountPath}")
   if [[ "$init_volume_mount" != "/data" ]]; then
     failed
@@ -195,6 +219,7 @@ verify_task6() {
   fi
 
   # Check if the shared volume is mounted in the main container
+  local main_volume_mount
   main_volume_mount=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath="{.spec.containers[?(@.name=='$main_container')].volumeMounts[?(@.name=='$shared_volume')].mountPath}")
   if [[ "$main_volume_mount" != "/usr/share/nginx/html" ]]; then
     failed
@@ -202,6 +227,7 @@ verify_task6() {
   fi
 
   # Check if the expected content is written to shared volume by the init container
+  local actual_text
   actual_text=$(kubectl exec -n "$namespace" "$pod_name" -c "$main_container" -- cat /usr/share/nginx/html/index.html 2>/dev/null)
   if [[ "$actual_text" != "$expected_text" ]]; then
     failed
@@ -213,6 +239,7 @@ verify_task6() {
 }
 
 verify_task7() {
+  TASKNAME="Task 7"
   local namespace="default"
   local pod_name="log-processor"
   local sidecar_name="log-forwarder"
