@@ -30,7 +30,8 @@
       "extensions": [
         "editorconfig.editorconfig",
         "DavidAnson.vscode-markdownlint",
-        "timonwong.shellcheck"
+        "timonwong.shellcheck",
+        "streetsidesoftware.code-spell-checker"
       ]
     }
   },

@@ -9,5 +9,21 @@
   },
   "shellcheck.customArgs": [
     "--external-sources"
-  ]
+  ],
+  "cSpell.ignoreWords": [
+    "Autoenv",
+    "ckadenv",
+    "CKAD",
+    "dind",
+    "DRYJ",
+    "DRYY",
+    "envpod",
+    "healthz",
+    "limitranges",
+    "mkcd",
+    "configmap",
+    "cpus",
+    "resourcequotas",
+    "toplevel"
+  ],
 }

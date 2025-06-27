@@ -344,7 +344,7 @@ Create a pod template.
 k run resource-pod --image nginx:1.29.0 --restart Never -n limits --dry-run=client -o yaml > t11pod.yaml
 ```
 
-Modifiy the template and update the resources section for the container.
+Modify the template and update the resources section for the container.
 
 ```yaml
 apiVersion: v1
@@ -371,7 +371,7 @@ spec:
 status: {}
 ```
 
-Apply the pod definiton.
+Apply the pod definition.
 
 ```bash
 k apply -f t11pod.yaml
@@ -381,7 +381,7 @@ k apply -f t11pod.yaml
 
 ## Task 12
 
-Try to apply the following pod definition and see why it failes.
+Try to apply the following pod definition and see why it fails.
 
 ```yaml
 apiVersion: v1
@@ -405,7 +405,7 @@ _Optionally:_ Try to run another pod in the same namespace.
 
 <details><summary>help</summary>
 
-When trying to apply the pod definiton as is it failes because the cpu limit and the memory limit is set to high.
+When trying to apply the pod definition as is it fails because the cpu limit and the memory limit is set to high.
 
 Describe the namespace to see it's resource limits.
 
@@ -413,16 +413,18 @@ Describe the namespace to see it's resource limits.
 k describe ns limits
 ```
 
-Alternatively you could get the limit definiton for the namespace.
+Alternatively you could get the limit definition for the namespace.
 
 ```bash
 k get limitranges -n limits -o yaml
 ```
 
-Modifiy the template and update the resources section for the container to not exceed the namespace limits and apply it.
+Modify the template and update the resources section for the container to not exceed the namespace limits and apply it.
 
 </details>
 
 ## TODO
 
 - secrets (use pod with restart never and print a secret as log output)
+- run a pod on a specific node using node selectors
+- run a pod on a specific node using taint and tolerance
