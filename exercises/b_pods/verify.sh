@@ -4,7 +4,7 @@
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
 verify_task1() {
-  TASKNAME="Task 1"
+  TASK_NUMBER="1"
   local namespace="task1"
   local pod_name="nginx"
 
@@ -29,7 +29,7 @@ verify_task1() {
 }
 
 verify_task2() {
-  TASKNAME="Task 2"
+  TASK_NUMBER="2"
   local namespace="task2"
   local pod_name="nginx"
   local image="nginx:1.21"
@@ -103,7 +103,7 @@ verify_task2() {
 }
 
 verify_task3() {
-  TASKNAME="Task 3"
+  TASK_NUMBER="3"
   local file="busybox-env.txt"
 
   # Check the container image, the pod name and the automatic removal of the pod
@@ -117,7 +117,7 @@ verify_task3() {
 }
 
 verify_task4() {
-  TASKNAME="Task 4"
+  TASK_NUMBER="4"
 
   local result
   result=$(kubectl apply -f "$(git rev-parse --show-toplevel)/.templates/b_pods/task4/pod.yaml" --dry-run=server 2> /dev/null)
@@ -129,7 +129,7 @@ verify_task4() {
 }
 
 verify_task5() {
-  TASKNAME="Task 5"
+  TASK_NUMBER="5"
   local pod_name="task5-app"
   local container_name="busybox"
   local image_name="busybox"
@@ -178,7 +178,7 @@ verify_task5() {
 }
 
 verify_task6() {
-  TASKNAME="Task 6"
+  TASK_NUMBER="6"
   local namespace="task6"
   local pod_name="nginx-init"
   local init_container="busy-init"
@@ -239,7 +239,7 @@ verify_task6() {
 }
 
 verify_task7() {
-  TASKNAME="Task 7"
+  TASK_NUMBER="7"
   local namespace="default"
   local pod_name="log-processor"
   local sidecar_name="log-forwarder"
@@ -300,7 +300,7 @@ verify_task7() {
 }
 
 verify_task8() {
-  TASKNAME="Task 8"
+  TASK_NUMBER="8"
   local namespace="task8"
   local pod_name="liveness-exec"
   local cmd_expected=("/bin/sh" "-c" "rm -rf /tmp/healthy; sleep 15; touch /tmp/healthy; sleep 7200")
@@ -362,7 +362,7 @@ verify_task8() {
 }
 
 verify_task9() {
-  TASKNAME="Task 9"
+  TASK_NUMBER="9"
   local pod_name="nginx-health"
   local namespace="default"
 
@@ -417,13 +417,13 @@ verify_task9() {
 }
 
 function verify_task10 {
-  TASKNAME="Task 10"
+  TASK_NUMBER="10"
   local namespace="task10"
   local pod_name="help-me"
 
   # Check the pod status
   local pod_status
-  pod_status=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath='{.status.phase}')
+  pod_status=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath='{.status.phase}' 2>/dev/null)
   if [ "$pod_status" != "Running" ]; then
     failed
     return
@@ -431,8 +431,144 @@ function verify_task10 {
 
   # Check the image
   local image
-  image=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath='{.spec.containers[0].image}')
+  image=$(kubectl get pod "$pod_name" -n "$namespace" -o=jsonpath='{.spec.containers[0].image}' 2>/dev/null)
   if [[ "$image" != nginx:* ]]; then
+    failed
+    return
+  fi
+
+  solved
+  return
+}
+
+verify_task11() {
+  TASK_NUMBER="11"
+
+  # Check if the pod `resource-pod` exists in the `limits` namespace
+  local pod_exists
+  pod_exists=$(kubectl get pod resource-pod -n limits --no-headers --ignore-not-found 2>/dev/null)
+  if [ -z "$pod_exists" ]; then
+      failed
+      return
+  fi
+
+  # Get the pod definition
+  local pod
+  pod=$(kubectl get pod resource-pod -n limits -o json)
+
+  # Check image
+  local image
+  image=$(echo "$pod" | jq -r '.spec.containers[0].image')
+  if [ "$image" != "nginx:1.29.0" ]; then
+      failed
+      return
+  fi
+
+  # Check restart policy
+  local restart_policy
+  restart_policy=$(echo "$pod" | jq -r '.spec.restartPolicy')
+  if [ "$restart_policy" != "Never" ]; then
+      failed
+      return
+  fi
+
+  # Check resource requests
+  local request_cpu
+  local request_memory
+  request_cpu=$(echo "$pod" | jq -r '.spec.containers[0].resources.requests.cpu')
+  request_memory=$(echo "$pod" | jq -r '.spec.containers[0].resources.requests.memory')
+  if [ "$request_cpu" != "100m" ]; then
+      failed
+      return
+  fi
+  if [ "$request_memory" != "128Mi" ]; then
+      failed
+      return
+  fi
+
+  # Check resource limits
+  local limit_cpu
+  local limit_memory
+  limit_cpu=$(echo "$pod" | jq -r '.spec.containers[0].resources.limits.cpu')
+  limit_memory=$(echo "$pod" | jq -r '.spec.containers[0].resources.limits.memory')
+  if [ "$limit_cpu" != "200m" ]; then
+      failed
+      return
+  fi
+  if [ "$limit_memory" != "256Mi" ]; then
+      failed
+      return
+  fi
+
+  solved
+  return
+}
+
+verify_task12() {
+  TASK_NUMBER="12"
+  local namespace="limits"
+  local limit_range="cpu-limit"
+  local pod_name="resource-pod2"
+
+  # Check if there is exactly one LimitRange in the namespace
+  local limit_ranges_count
+  limit_ranges_count=$(kubectl get limitranges -n "${namespace}" --no-headers | wc -l)
+  if [ "${limit_ranges_count}" -ne 1 ]; then
+    failed
+    return
+  fi
+
+  # Get the limit range for the namespace
+  local limit_range
+  limit_range=$(kubectl get limitranges -n "${namespace}" "${limit_range}" -o json 2>/dev/null)
+  if [ -z "${limit_range}" ]; then
+    failed
+    return
+  fi
+
+  local max_cpu max_memory min_cpu min_memory
+  max_cpu=$(echo "${limit_range}" | jq -r '.spec.limits[0].max.cpu // empty')
+  max_memory=$(echo "${limit_range}" | jq -r '.spec.limits[0].max.memory // empty')
+  min_cpu=$(echo "${limit_range}" | jq -r '.spec.limits[0].min.cpu // empty')
+  min_memory=$(echo "${limit_range}" | jq -r '.spec.limits[0].min.memory // empty')
+
+  # Check if pod exists
+  if ! kubectl get pod "${pod_name}" -n "${namespace}" &>/dev/null; then
+    failed
+    return
+  fi
+
+  # Get the pod's resource limits
+  local pod_resources
+  pod_resources=$(kubectl get pod "${pod_name}" -n "${namespace}" -o json)
+  local pod_cpu pod_memory
+  pod_cpu=$(echo "${pod_resources}" | jq -r '.spec.containers[0].resources.limits.cpu // empty')
+  pod_memory=$(echo "${pod_resources}" | jq -r '.spec.containers[0].resources.limits.memory // empty')
+
+  # Verify CPU limits
+  if [[ -n "${max_cpu}" && "${pod_cpu}" > "${max_cpu}" ]]; then
+    failed
+    return
+  fi
+  if [[ -n "${min_cpu}" && "${pod_cpu}" < "${min_cpu}" ]]; then
+    failed
+    return
+  fi
+
+  # Verify Memory limits
+  if [[ -n "${max_memory}" && "${pod_memory}" > "${max_memory}" ]]; then
+    failed
+    return
+  fi
+  if [[ -n "${min_memory}" && "${pod_memory}" < "${min_memory}" ]]; then
+    failed
+    return
+  fi
+
+  # Check the pod status
+  local pod_status
+  pod_status=$(kubectl get pod "${pod_name}" -n "${namespace}" -o json | jq -r '.status.phase')
+  if [[ "${pod_status}" != "Running" ]]; then
     failed
     return
   fi
@@ -451,4 +587,6 @@ verify_task7
 verify_task8
 verify_task9
 verify_task10
+verify_task11
+verify_task12
 exit 0

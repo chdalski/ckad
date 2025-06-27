@@ -4,7 +4,7 @@
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
 verify_task1() {
-  TASKNAME="Task 1"
+  TASK_NUMBER="1"
   local namespace="ckad"
 
   if kubectl get ns "$namespace" &> /dev/null; then
@@ -15,7 +15,7 @@ verify_task1() {
 }
 
 verify_task2() {
-  TASKNAME="Task 2"
+  TASK_NUMBER="2"
   local namespace="foo"
 
   if [ ! -f ./"$namespace".yaml ]; then
@@ -32,7 +32,7 @@ verify_task2() {
 }
 
 verify_task3() {
-  TASKNAME="Task 3"
+  TASK_NUMBER="3"
   local namespace="foo"
 
   local annotation_hello
@@ -54,7 +54,7 @@ verify_task3() {
 }
 
 verify_task4() {
-  TASKNAME="Task 4"
+  TASK_NUMBER="4"
   local namespace="foo"
 
   local file
@@ -69,7 +69,7 @@ verify_task4() {
 }
 
 verify_task5() {
-  TASKNAME="Task 5"
+  TASK_NUMBER="5"
   local namespace="foo"
 
   local file
@@ -84,7 +84,7 @@ verify_task5() {
 }
 
 verify_task6() {
-  TASKNAME="Task 6"
+  TASK_NUMBER="6"
   local file="all-namespaces.txt"
 
   if diff <(kubectl get ns -o name) -u ./${file} &> /dev/null; then
@@ -95,7 +95,7 @@ verify_task6() {
 }
 
 verify_task7() {
-  TASKNAME="Task 7"
+  TASK_NUMBER="7"
   local namespace="blueberry"
 
   local line_length
@@ -131,7 +131,7 @@ verify_task7() {
 }
 
 verify_task8() {
-  TASKNAME="Task 8"
+  TASK_NUMBER="8"
   local namespace="sunshine"
 
   local result

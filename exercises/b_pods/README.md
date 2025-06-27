@@ -328,7 +328,101 @@ k edit -n task10 po help-me
 
 </details>
 
+## Task 11
+
+Create a pod named `resource-pod` using the `nginx:1.29.0` image.
+Make sure the pod only runs a single time.
+The pod is supposed to run in namespace `limits`.
+Set resource requests to `100m CPU` and `128Mi memory`.
+Set resource limits to `200m CPU` and `256Mi memory`.
+
+<details><summary>help</summary>
+
+Create a pod template.
+
+```bash
+k run resource-pod --image nginx:1.29.0 --restart Never -n limits --dry-run=client -o yaml > t11pod.yaml
+```
+
+Modifiy the template and update the resources section for the container.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: resource-pod
+  name: resource-pod
+  namespace: limits
+spec:
+  containers:
+  - image: nginx:1.29.0
+    name: resource-pod
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never # The container is supposed to run only once.
+status: {}
+```
+
+Apply the pod definiton.
+
+```bash
+k apply -f t11pod.yaml
+```
+
+</details>
+
+## Task 12
+
+Try to apply the following pod definition and see why it failes.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-pod2
+  namespace: limits
+spec:
+  containers:
+  - image: nginx:1.29.0
+    name: resource-pod2
+    resources:
+      limits:
+        cpu: 220m
+        memory: 512Mi
+```
+
+Next, fix the definition and apply it.
+
+_Optionally:_ Try to run another pod in the same namespace.
+
+<details><summary>help</summary>
+
+When trying to apply the pod definiton as is it failes because the cpu limit and the memory limit is set to high.
+
+Describe the namespace to see it's resource limits.
+
+```bash
+k describe ns limits
+```
+
+Alternatively you could get the limit definiton for the namespace.
+
+```bash
+k get limitranges -n limits -o yaml
+```
+
+Modifiy the template and update the resources section for the container to not exceed the namespace limits and apply it.
+
+</details>
+
 ## TODO
 
-- resource limits
-- resource quota
+- secrets (use pod with restart never and print a secret as log output)
