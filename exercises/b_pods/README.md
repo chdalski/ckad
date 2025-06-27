@@ -423,8 +423,177 @@ Modify the template and update the resources section for the container to not ex
 
 </details>
 
-## TODO
+## Task 13
 
-- secrets (use pod with restart never and print a secret as log output)
-- run a pod on a specific node using node selectors
-- run a pod on a specific node using taint and tolerance
+Create a pod named `secret-logger` that reads the key `msg` of secret `task13-secret` to an environment variable.
+Print the secret to `stdout` one time.
+
+<details><summary>help</summary>
+
+Create a pod definition (envFrom solution).
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-logger
+spec:
+  containers:
+  - name: secret-logger
+    image: busybox
+    command:
+    - sh
+    - -c
+    - echo "$msg"
+    envFrom:
+    - secretRef:
+        name: task13-secret
+  restartPolicy: Never
+```
+
+Or create a pod definition (env solution).
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-logger
+spec:
+  containers:
+  - name: secret-logger
+    image: busybox
+    command:
+    - sh
+    - -c
+    - echo "$SECRET_VALUE"
+    env:
+    - name: SECRET_VALUE
+      valueFrom:
+        secretKeyRef:
+          name: task13-secret
+          key: msg
+  restartPolicy: Never
+```
+
+Apply the definition.
+
+```bash
+k apply -f t13pod.yaml
+```
+
+_Optionally:_ Verify the output.
+
+```bash
+k logs secret-logger
+```
+
+</details>
+
+## Task 14
+
+Create a pod named `selector` in namespace `task14` that only runs on nodes where the label `tier` has value `backend`.
+Use a `nodeSelector` to accomplish the task.
+
+<details><summary>help</summary>
+
+Create the pod definition.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: selector
+  namespace: task14
+spec:
+  nodeSelector:
+    tier: backend
+  containers:
+  - image: nginx
+    name: selector
+```
+
+Apply the pod definition.
+
+```bash
+k apply -f t14pod.yaml
+```
+
+</details>
+
+## Task 15
+
+Create a pod named `affinity` in namespace `task15` that only runs on nodes where the label `tier` has value `frontend`.
+Use a `nodeAffinity` to accomplish the task.
+
+<details><summary>help</summary>
+
+Create the pod definition.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: affinity
+  namespace: task15
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: tier
+            operator: In
+            values:
+            - frontend
+  containers:
+  - name: nginx
+    image: nginx
+```
+
+</details>
+
+## Task 16
+
+Create a pod named `tolerant`.
+The pod should run once and terminate after writing `I'm tolerant!` to the log."
+Ensure the pod does not run on nodes with the label `tier` set to `frontend` or `backend`.
+Schedule the pod on the control plane node.
+
+<details><summary>help</summary>
+
+Create the pod definition.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tolerant
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: tier
+            operator: NotIn
+            values:
+            - frontend
+            - backend
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  containers:
+  - name: tolerant
+    image: busybox
+    command: ["/bin/sh", "-c", "echo \"I'm tolerant!\""]
+  restartPolicy: Never
+```
+
+Apply the definition.
+
+```bash
+k apply -f t16pod.yaml
+```
+
+</details>

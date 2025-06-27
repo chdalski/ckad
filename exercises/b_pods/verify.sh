@@ -577,6 +577,242 @@ verify_task12() {
   return
 }
 
+# Function to verify Task 13
+verify_task13() {
+  TASK_NUMBER="13"
+  local pod_name="secret-logger"
+  local expected_value="good job"
+  local secret_name="task13-secret"
+
+  # Check if the pod exists
+  if ! kubectl get pod "$pod_name" &>/dev/null; then
+    failed
+    return
+  fi
+
+  # Get the pod definition
+  local pod_resources
+  pod_resources=$(kubectl get pod "${pod_name}" -n "${namespace}" -o json 2>/dev/null)
+
+  # Check if env or envFrom was used
+  local env_from
+  env_from=$(echo "${pod_resources}" | jq -r '.spec.containers[0].envFrom[0].secretRef.name // empty')
+  env=$(echo "${pod_resources}" | jq -r '.spec.containers[0].env[0].valueFrom.secretKeyRef.name // empty')
+  if ! [[ "$env_from" == "$secret_name" || "$env" == "$secret_name" ]]; then
+    echo "Neither envFrom nor env is set correctly to 'task13-secret'."
+    failed  # Call 'failed' function or exit with an error
+    return
+  fi
+
+  # Check the pod status
+  local pod_status
+  pod_status=$(echo "${pod_resources}" | jq -r '.status.phase')
+  if [[ "$pod_status" != "Succeeded" ]]; then
+    failed
+    return
+  fi
+
+  # Fetch the pod logs and verify output
+  local pod_logs
+  pod_logs=$(kubectl logs "$pod_name")
+  if [[ "$pod_logs" != "$expected_value" ]]; then
+    failed
+    return
+  fi
+
+  # If all checks pass, mark as solved
+  solved
+  return
+}
+
+verify_task14() {
+  TASK_NUMBER="14"
+  local namespace="task14"
+  local pod_name="selector"
+  local label_key="tier"
+  local label_value="backend"
+
+  # Ensure that the pod exists in the correct namespace
+  if ! kubectl get pod "$pod_name" -n "$namespace" &>/dev/null; then
+    failed
+    return
+  fi
+
+  # Verify that the pod spec includes the correct nodeSelector
+  local node_selector
+  node_selector=$(kubectl get pod "$pod_name" -n "$namespace" -o jsonpath='{.spec.nodeSelector.tier}')
+  if [[ "$node_selector" != "$label_value" ]]; then
+    failed
+    return
+  fi
+
+  # Verify that the pod is properly scheduled to a node
+  local node_name
+  node_name=$(kubectl get pod "$pod_name" -n "$namespace" -o jsonpath='{.spec.nodeName}')
+  if [[ -z "$node_name" ]]; then
+    failed
+    return
+  fi
+
+  # Ensure the node has the correct label
+  local node_label_value
+  node_label_value=$(kubectl get node "$node_name" -o jsonpath="{.metadata.labels.$label_key}")
+  if [[ "$node_label_value" != "$label_value" ]]; then
+    failed
+    return
+  fi
+
+  # Ensure the pod is in running state
+  local pod_phase
+  pod_phase=$(kubectl get pod "$pod_name" -n "$namespace" -o jsonpath='{.status.phase}')
+  if [[ "$pod_phase" != "Running" ]]; then
+    failed
+    return
+  fi
+
+  solved
+  return
+}
+
+function verify_task15() {
+    TASK_NUMBER="15"
+
+    # Define and initialize local variables
+    local namespace="task15"
+    local pod_name="affinity"
+    local node_label_key="tier"
+    local node_label_value="frontend"
+
+    # Check if the namespace exists
+    if ! kubectl get namespace "${namespace}" &>/dev/null; then
+        failed
+        return
+    fi
+
+    # Check if the pod exists in the namespace
+    if ! kubectl get pod "${pod_name}" -n "${namespace}" &>/dev/null; then
+        failed
+        return
+    fi
+
+    # Check if the pod has the correct nodeAffinity configured
+    local affinity_config
+    affinity_config=$(kubectl get pod "${pod_name}" -n "${namespace}" -o json | jq '.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution')
+
+    if [[ -z "${affinity_config}" ]] ||
+       [[ $(echo "${affinity_config}" | jq -r '.nodeSelectorTerms | length') -eq 0 ]]; then
+        failed
+        return
+    fi
+
+    local match_key
+    match_key=$(echo "${affinity_config}" | jq -r '.nodeSelectorTerms[0].matchExpressions[0].key')
+
+    local match_operator
+    match_operator=$(echo "${affinity_config}" | jq -r '.nodeSelectorTerms[0].matchExpressions[0].operator')
+
+    local match_values
+    match_values=$(echo "${affinity_config}" | jq -r '.nodeSelectorTerms[0].matchExpressions[0].values[]')
+
+    if [[ "${match_key}" != "${node_label_key}" ]] ||
+       [[ "${match_operator}" != "In" ]] ||
+       [[ "${match_values}" != "${node_label_value}" ]]; then
+        failed
+        return
+    fi
+
+    # Retrieve the node where the pod is running
+    local node_name
+    node_name=$(kubectl get pod "${pod_name}" -n "${namespace}" -o json | jq -r '.spec.nodeName')
+
+    if [[ -z "${node_name}" ]]; then
+        failed
+        return
+    fi
+
+    # Verify that the node has the expected label
+    if ! kubectl get node "${node_name}" -o json | jq -e ".metadata.labels[\"${node_label_key}\"] == \"${node_label_value}\"" &>/dev/null; then
+        failed
+        return
+    fi
+
+    solved
+    return
+}
+
+verify_task16() {
+    TASK_NUMBER="16"
+
+    local pod_name="tolerant"
+    local control_plane_label="node-role.kubernetes.io/control-plane"
+    local tier_key="tier"
+    local forbidden_tiers=("frontend" "backend")
+    local expected_message="I'm tolerant!"
+    local namespace="default"
+
+    # Check if the pod exists
+    local pod_json
+    pod_json=$(kubectl get pod "$pod_name" -n "$namespace" -o json 2>/dev/null || true)
+    if [[ -z "$pod_json" ]]; then
+        failed
+        return
+    fi
+
+    # Verify the pod's node affinity
+    local affinity
+    affinity=$(echo "$pod_json" | jq -r '.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0]')
+    if [[ $(echo "$affinity" | jq -r '.key') != "$tier_key" ]] || [[ $(echo "$affinity" | jq -r '.operator') != "NotIn" ]]; then
+        failed
+        return
+    fi
+
+    # Verify forbidden tiers
+    local values
+    values=$(echo "$affinity" | jq -r '.values[]')
+    for forbidden in "${forbidden_tiers[@]}"; do
+        if [[ "$values" != *"$forbidden"* ]]; then
+            failed
+            return
+        fi
+    done
+
+    # Verify the toleration for control-plane
+    local toleration
+    toleration=$(echo "$pod_json" | jq -r '.spec.tolerations[] | select(.key=="'"$control_plane_label"'")')
+    if [[ $(echo "$toleration" | jq -r '.operator') != "Exists" ]] || [[ $(echo "$toleration" | jq -r '.effect') != "NoSchedule" ]]; then
+        failed
+        return
+    fi
+
+    # Check the restart policy is "Never"
+    local restart_policy
+    restart_policy=$(echo "$pod_json" | jq -r '.spec.restartPolicy')
+    if [[ "$restart_policy" != "Never" ]]; then
+        failed
+        return
+    fi
+
+    # Check the pod's status to ensure it has completed successfully
+    local pod_phase
+    pod_phase=$(echo "$pod_json" | jq -r '.status.phase')
+    if [[ "$pod_phase" != "Succeeded" ]]; then
+        failed
+        return
+    fi
+
+    # Check the pod logs for the expected message
+    local pod_logs
+    pod_logs=$(kubectl logs "$pod_name" -n "$namespace" 2>/dev/null || true)
+    if [[ "$pod_logs" != *"$expected_message"* ]]; then
+        failed
+        return
+    fi
+
+    # If all checks pass, mark as solved
+    solved
+    return
+}
+
 verify_task1
 verify_task2
 verify_task3
@@ -589,4 +825,8 @@ verify_task9
 verify_task10
 verify_task11
 verify_task12
+verify_task13
+verify_task14
+verify_task15
+verify_task16
 exit 0
