@@ -10,7 +10,7 @@
   "shellcheck.customArgs": [
     "--external-sources"
   ],
-  "cSpell.words": [
+  "cSpell.ignoreWords": [
     "Autoenv",
     "ckadenv",
     "CKAD",
@@ -24,6 +24,7 @@
     "configmap",
     "cpus",
     "resourcequotas",
+    "tasknumber",
     "toplevel",
     "tolerations"
   ]
