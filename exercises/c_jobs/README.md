@@ -1,4 +1,4 @@
-# Jobs
+# Jobs & CronJobs
 
 __Note:__ Remember you can use `kubectl create job` and `kubectl create cronjob` to create templates for these resources.
 

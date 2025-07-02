@@ -271,7 +271,7 @@ k apply -f t8pod.yaml
 ## Task 9
 
 Create a pod called `nginx-health` with image `nginx:1.21`.
-Mount all files of the config map `nginx-health` to path `/etc/nginx.conf.d`.
+Mount all files of the config map `nginx-health` to path `/etc/nginx/conf.d`.
 Also create a readiness probe to check path `/healthz` on port `80` after an initial delay of `3` seconds.
 The probe should be run every `5` seconds.
 
