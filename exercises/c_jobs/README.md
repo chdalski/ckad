@@ -402,8 +402,8 @@ _Objective_: Configure a Job to handle long-running tasks.
 Requirements:
 
 - Create a Job named `long-job` in the `default` namespace.
-- Use the image `busybox:1.28` and the command `sh -c 'for i in $(seq 1 300); do echo "Running step $i"; sleep 1; done'`.
-- Ensure that the Job does not restart Pods unnecessarily and completes successfully after 5 minutes.
+- Use the image `busybox:1.28` and the command `for i in $(seq 1 60); do echo "Running step $i"; sleep 1; done`.
+- Ensure that the Job does not restart Pods unnecessarily and completes successfully after 60 seconds.
 - Verify that logs from the long-running Job's Pods include the full execution output of all steps.
 
 <details><summary>help</summary>
@@ -411,42 +411,119 @@ Requirements:
 Create and apply the resource.
 
 ```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: long-job
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox:1.28
+        name: long-job
+        command:
+        - /bin/sh
+        - -c
+        - for i in $(seq 1 60); do echo "Running step $i"; sleep 1; done
+      restartPolicy: Never
 ```
 
 </details>
 
 ## Task 12
 
-_Objective_: Limit the number of concurrently running Pods for a Job.
+_Objective_: Create a CronJob that runs every 5 minutes and prints the date.
 
 Requirements:
 
-- Create a Job named active-limits-job in the default namespace.
-- Use the image `busybox:1.28` and the command `sh -c "echo Running task; sleep 10"`.
-- Configure the Job's activeDeadlineSeconds to 20 and backoffLimit to 2.
-- Limit the number of active Pods to 2 at any given time.
-- Verify that the Job adheres to the parallelism constraints and completes successfully.
+- Create a CronJob named `print-date` in the `default` namespace.
+- Make sure it starts the job every 5 minutes.
+- Use the image `busybox:1.28` with command `/bin/sh -c`.
+- Use the arguments field to print the current date to stdout (`echo "Current date: $(date)"`)
+- Make sure the Job doesn't restarts on failures.
 
 <details><summary>help</summary>
 
 Create and apply the resource.
 
 ```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: print-date
+  namespace: default
+spec:
+  jobTemplate:
+    metadata:
+      name: print-date
+    spec:
+      template:
+        spec:
+          containers:
+          - image: busybox:1.28
+            name: print-date
+            command:
+            - /bin/sh
+            - -c
+            args:
+            - 'echo "Current date: $(date)"'
+          restartPolicy: Never
+  schedule: '*/5 * * * *'
 ```
 
 </details>
 
 ## Task 13
 
-_Objective_: Configure a Job with owner references for cleaning up finished Pods.
+_Objective_: Create a Job with a sidecar container that processes it's logs.
 
 Requirements:
 
-- Create a Job named `cleanup-policy-job` in the `default` namespace.
-- Use the image `busybox:1.28` and the command `sh -c "echo Cleanup example"`.
-- Ensure the Job's Pods are automatically deleted upon successful completion using ttlSecondsAfterFinished.
-- Verify that the Pod is deleted after completion.
+- Create a job called `sidecar-job` using image `alpine:3.22` in namespace `sidecar`.
+- Write the text `app log` to the file `/opt/logs.txt`.
+- Mount an shared volume called `data` of type `emptyDir` on path `/opt`.
+- Also create a sidecar `initContainer` called `log-forwarder` with image `busybox:1.28`
+- Tail the file from the shared volume with command `tail -F /opt/logs.txt`.
 
-## TODO
+<details><summary>help</summary>
 
-[Jobs with sidecar containers](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/#jobs-with-sidecar-containers)
+__Note:__
+sidecar containers are implemented as init containers with restart policy set to "Always", see the [docs](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/#jobs-with-sidecar-containers) for more details.
+
+Create and apply the resource.
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sidecar-job
+  namespace: sidecar
+spec:
+  template:
+    spec:
+      containers:
+        - name: sidecar-job
+          image: alpine:3.22
+          command:
+          - /bin/sh
+          - -c
+          - echo "app log" > /opt/logs.txt
+          volumeMounts:
+            - name: data
+              mountPath: /opt
+      initContainers:
+        - name: log-forwarder
+          image: busybox:1.28
+          restartPolicy: Always
+          command: ['/bin/sh', '-c', 'tail -F /opt/logs.txt']
+          volumeMounts:
+            - name: data
+              mountPath: /opt
+      restartPolicy: Never
+      volumes:
+        - name: data
+          emptyDir: {}
+```
+
+</details>

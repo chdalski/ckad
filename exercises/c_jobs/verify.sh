@@ -664,6 +664,261 @@ verify_task10() {
   return
 }
 
+function verify_task11() {
+  TASK_NUMBER="11"
+
+  # Local Variable Definitions
+  local job_name="long-job"
+  local namespace="default"
+  local expected_image="busybox:1.28"
+  local expected_command="for i in \$(seq 1 60); do echo \"Running step \$i\"; sleep 1; done"
+  local restart_policy="Never"
+
+  # Verify the Job exists
+  local job_exists
+  job_exists=$(kubectl get job $job_name -n $namespace -o json 2>/dev/null)
+  if [[ -z "$job_exists" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the Job's specification
+  local job_image
+  job_image=$(echo "$job_exists" | jq -r '.spec.template.spec.containers[0].image')
+  if [[ "$job_image" != "$expected_image" ]]; then
+    failed
+    return
+  fi
+
+  local job_command
+  job_command=$(echo "$job_exists" | jq -r '.spec.template.spec.containers[0].command | join(" ")')
+  if [[ ! "$job_command" == *"$expected_command" ]]; then
+    failed
+    return
+  fi
+
+  local job_restart_policy
+  job_restart_policy=$(echo "$job_exists" | jq -r '.spec.template.spec.restartPolicy')
+  if [[ "$job_restart_policy" != "$restart_policy" ]]; then
+    failed
+    return
+  fi
+
+  # Check if the Job completed successfully
+  local job_status
+  job_status=$(echo "$job_exists" | jq -r '.status.succeeded')
+  if [[ "$job_status" != "1" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the logs of the Job's Pod
+  local pod_name
+  pod_name=$(kubectl get pods -n "$namespace" -l job-name="$job_name" -o json | jq -r '.items[0].metadata.name')
+  if [[ -z "$pod_name" ]]; then
+    failed
+    return
+  fi
+
+  local pod_logs
+  pod_logs=$(kubectl logs "$pod_name" -n "$namespace" 2>/dev/null)
+  if [[ -z "$pod_logs" ]]; then
+    failed
+    return
+  fi
+
+  for i in $(seq 1 60); do
+    if ! echo "$pod_logs" | grep -q "Running step $i"; then
+      failed
+      return
+    fi
+  done
+
+  # If all checks pass
+  solved
+  return
+}
+
+verify_task12() {
+  TASK_NUMBER="12"
+
+  # Local variables
+  local namespace="default"
+  local cronjob_name="print-date"
+  local expected_image="busybox:1.28"
+  local expected_command="/bin/sh -c"
+  local expected_args="echo \"Current date: \$(date)\""
+  local expected_restart_policy="Never"
+  local expected_schedule="*/5 * * * *"
+
+  # Retrieve the CronJob details
+  local cronjob
+  cronjob=$(kubectl get cronjob $cronjob_name -n $namespace -o json 2>/dev/null)
+
+  # Check if the CronJob exists
+  if [[ -z "$cronjob" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the schedule
+  local schedule
+  schedule=$(echo "$cronjob" | jq -r '.spec.schedule // empty')
+  if [[ "$schedule" != "$expected_schedule" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the image
+  local image
+  image=$(echo "$cronjob" | jq -r '.spec.jobTemplate.spec.template.spec.containers[0].image // empty')
+  if [[ "$image" != "$expected_image" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the command
+  local command
+  command=$(echo "$cronjob" | jq -r '.spec.jobTemplate.spec.template.spec.containers[0].command | join(" ")')
+  if [[ "$command" != "$expected_command" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the args
+  local args
+  args=$(echo "$cronjob" | jq -r '.spec.jobTemplate.spec.template.spec.containers[0].args | join(" ")')
+  if [[ "$args" != "$expected_args" ]]; then
+    failed
+    return
+  fi
+
+  # Verify the restart policy
+  local restart_policy
+  restart_policy=$(echo "$cronjob" | jq -r '.spec.jobTemplate.spec.template.spec.restartPolicy // empty')
+  if [[ "$restart_policy" != "$expected_restart_policy" ]]; then
+    failed
+    return
+  fi
+
+  # Call `solved` if all checks passed
+  solved
+  return
+}
+
+verify_task13() {
+  TASK_NUMBER="13"
+  local namespace="sidecar"
+  local job_name="sidecar-job"
+  local container_name="sidecar-job"
+  local init_container_name="log-forwarder"
+  local main_image="alpine:3.22"
+  local init_image="busybox:1.28"
+  local shared_volume_name="data"
+  local main_command='echo "app log" > /opt/logs.txt'
+  local init_command="tail -F /opt/logs.txt"
+
+  # Verify the namespace exists
+  if ! kubectl get ns "${namespace}" &>/dev/null; then
+    failed
+    return
+  fi
+
+  # Verify the Job exists
+  if ! kubectl get job "${job_name}" -n "${namespace}" -o json | jq . &>/dev/null; then
+    failed
+    return
+  fi
+
+  # Verify the Job specification
+  local job_spec
+  job_spec=$(kubectl get job "${job_name}" -n "${namespace}" -o json)
+
+  # Check if the job has the correct container(s)
+  local containers
+  containers=$(echo "${job_spec}" | jq -r '.spec.template.spec.containers[].name')
+  if ! echo "${containers}" | grep -q "${container_name}"; then
+    failed
+    return
+  fi
+
+  # Verify main container image and command
+  local main_image_actual
+  main_image_actual=$(echo "${job_spec}" | jq -r '.spec.template.spec.containers[] | select(.name=="'"${container_name}"'").image')
+  if [ "${main_image_actual}" != "${main_image}" ]; then
+    failed
+    return
+  fi
+
+  local main_command_actual
+  main_command_actual=$(echo "${job_spec}" | jq -r '.spec.template.spec.containers[] | select(.name=="'"${container_name}"'").command | join(" ")')
+  if [[ ! "${main_command_actual}" == *"${main_command}" ]]; then
+    failed
+    return
+  fi
+
+  # Verify initContainer image, command, and restart policy
+  local init_container
+  init_container=$(echo "${job_spec}" | jq -r '.spec.template.spec.initContainers[] | select(.name=="'"${init_container_name}"'")')
+
+  local init_image_actual
+  init_image_actual=$(echo "${init_container}" | jq -r '.image')
+  if [ "${init_image_actual}" != "${init_image}" ]; then
+    failed
+    return
+  fi
+
+  local init_command_actual
+  init_command_actual=$(echo "${init_container}" | jq -r '.command | join(" ")')
+  if [[ ! "${init_command_actual}" == *"${init_command}" ]]; then
+    failed
+    return
+  fi
+
+  local init_restart_policy_actual
+  init_restart_policy_actual=$(echo "${job_spec}" | jq -r '.spec.template.spec.initContainers[] | select(.name=="'"${init_container_name}"'").restartPolicy')
+  if [ "${init_restart_policy_actual}" != "Always" ]; then
+    failed
+    return
+  fi
+
+  # Verify shared volume configuration
+  local volume
+  volume=$(echo "${job_spec}" | jq -r '.spec.template.spec.volumes[] | select(.name=="'"${shared_volume_name}"'")')
+  if [ "$(echo "${volume}" | jq -r '.emptyDir | objects | length')" != "0" ]; then
+    failed
+    return
+  fi
+
+  # Verify volume mounts in the main container
+  local main_volume_mount
+  main_volume_mount=$(echo "${job_spec}" | jq -r '.spec.template.spec.containers[] | select(.name=="'"${container_name}"'").volumeMounts[] | select(.name=="'"${shared_volume_name}"'").mountPath')
+  if [ "${main_volume_mount}" != "/opt" ]; then
+    failed
+    return
+  fi
+
+  # Verify volume mounts in the initContainer
+  local init_volume_mount
+  init_volume_mount=$(echo "${job_spec}" | jq -r '.spec.template.spec.initContainers[] | select(.name=="'"${init_container_name}"'").volumeMounts[] | select(.name=="'"${shared_volume_name}"'").mountPath')
+  if [ "${init_volume_mount}" != "/opt" ]; then
+    failed
+    return
+  fi
+
+  # Ensure the Job has the correct restartPolicy
+  local restart_policy_actual
+  restart_policy_actual=$(echo "${job_spec}" | jq -r '.spec.template.spec.restartPolicy')
+  if [ "${restart_policy_actual}" != "Never" ]; then
+    failed
+    return
+  fi
+
+  # If all checks pass, mark as solved
+  solved
+  return
+}
+
 verify_task1
 verify_task2
 verify_task3
@@ -674,4 +929,7 @@ verify_task7
 verify_task8
 verify_task9
 verify_task10
+verify_task11
+verify_task12
+verify_task13
 exit 0

@@ -77,7 +77,8 @@ rdn() { kubectl config set-context --current --namespace=default ; }
 # organize files per question
 mkcd() { mkdir -p "$@" && cd "$@" || exit ; }
 
-# create/destroy from yaml faster
+# create/destroy/replace from yaml faster
 alias kaf='kubectl apply -f'
-alias kdf='kubectl delete -f'
+alias kdf='kubectl delete --force -f'
+alias krf='kubectl replace --force -f'
 ```
