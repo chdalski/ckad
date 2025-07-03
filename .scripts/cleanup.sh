@@ -2,6 +2,14 @@
 
 echo "Cleaning up exercise \"${CKAD_EXERCISE_DIR}\"..."
 
+
+cleanup_kind_cluster() {
+  # Set parameters
+  NAME=$1
+
+  kind delete cluster --name "${NAME}"
+}
+
 cleanup_git_ignored_files() {
   # Set parameters
   WORK_DIR=$1
@@ -24,13 +32,10 @@ cleanup_git_ignored_files() {
   fi
 }
 
-
-cleanup_kind_cluster() {
-  # Set parameters
-  NAME=$1
-
-  kind delete cluster --name "${NAME}"
+cleanup_volume_mounts() {
+  sudo rm -rf "$(git rev-parse --show-toplevel)/.cluster/mounts"
 }
 
-cleanup_git_ignored_files "$(pwd)/${CKAD_EXERCISE_DIR}"
 cleanup_kind_cluster ckad
+cleanup_git_ignored_files "$(pwd)/${CKAD_EXERCISE_DIR}"
+cleanup_volume_mounts

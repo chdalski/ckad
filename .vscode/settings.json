@@ -12,21 +12,23 @@
   ],
   "cSpell.ignoreWords": [
     "Autoenv",
-    "ckadenv",
     "CKAD",
-    "devcontainers",
-    "dind",
     "DRYJ",
     "DRYY",
+    "ckadenv",
+    "configmap",
+    "cpus",
+    "devcontainers",
+    "dind",
     "envpod",
     "healthz",
     "limitranges",
     "mkcd",
-    "configmap",
-    "cpus",
+    "persistentvolumeclaims",
     "resourcequotas",
+    "securepassword",
     "tasknumber",
-    "toplevel",
-    "tolerations"
+    "tolerations",
+    "toplevel"
   ]
 }

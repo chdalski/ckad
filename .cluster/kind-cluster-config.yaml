@@ -3,15 +3,17 @@ kind: Cluster
 name: ckad
 nodes:
 - role: control-plane
-  extraMounts:
-  - hostPath: /workspaces/ckad/.cluster/mounts/data
-    containerPath: /mnt/data
   kubeadmConfigPatches:
   - |
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
         event-ttl: "8h0m0s"
+  extraMounts:
+  - hostPath: /workspaces/ckad/.cluster/mounts/data
+    containerPath: /mnt/data
+  - hostPath: /workspaces/ckad/.cluster/mounts/storage
+    containerPath: /tmp/storage
   extraPortMappings:
   - containerPort: 30000
     hostPort: 30000
@@ -26,6 +28,10 @@ nodes:
   extraMounts:
   - hostPath: /workspaces/ckad/.cluster/mounts/data
     containerPath: /mnt/data
+  - hostPath: /workspaces/ckad/.cluster/mounts/storage
+    containerPath: /tmp/storage
+  - hostPath: /workspaces/ckad/.cluster/mounts/frontend
+    containerPath: /tmp/frontend
   extraPortMappings:
   - containerPort: 30000
     hostPort: 40000
@@ -42,6 +48,10 @@ nodes:
   extraMounts:
   - hostPath: /workspaces/ckad/.cluster/mounts/data
     containerPath: /mnt/data
+  - hostPath: /workspaces/ckad/.cluster/mounts/storage
+    containerPath: /tmp/storage
+  - hostPath: /workspaces/ckad/.cluster/mounts/backend
+    containerPath: /tmp/backend
   extraPortMappings:
   - containerPort: 30000
     hostPort: 50000
