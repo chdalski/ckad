@@ -370,26 +370,68 @@ _Objective_: Use subPath mounting within a PersistentVolume.
 Requirements:
 
 - Create a PersistentVolume and PersistentVolumeClaim as follows:
-  - The PV backs storage using `hostPath` located at `/mnt/volumes`.
+  - The PV backs storage using `hostPath` located at `/mnt/projects`.
   - The PVC requests 2Gi of storage.
-- Deploy a pod that mounts the PVC at `/data`.
-- Use a `subPath` to mount only the subdirectory `project1` inside `/data`.
-- Test that the container can write files in `/data` under the `project1` subdirectory.
-- Use the `nginx` image for the container.
+- Deploy a pod with image `nginx` that mounts the PVC at `/projects`.
+- Use a `subPath` to mount only the subdirectory `project1` inside `/projects`.
+- Test that the container can write files in `/projects` under the `project1` subdirectory.
 
 <details><summary>help</summary>
-</details>
 
-## Task 8
+Create and apply the resources:
 
-_Objective_: Test dynamic provisioning with a storage class.
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: t7vol
+spec:
+  storageClassName: standard
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 2Gi
+  hostPath:
+    path: /mnt/projects
+```
 
-Requirements:
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: t7claim
+spec:
+  accessModes:
+  - ReadWriteMany
+  volumeName: t7vol
+  resources:
+    requests:
+      storage: 2Gi
+```
 
-- Create a StorageClass named `fast-storage` with the `Retain` reclaim policy and any provisioner you have access to (e.g., `kubernetes.io/no-provisioner` if testing locally).
-- Define a PersistentVolumeClaim that dynamically gets bound to a PV using `fast-storage`.
-- Deploy a pod that uses the PVC to mount storage at `/mnt` in the container.
-- Use the `busybox` image and perform simple read/write operations.
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: t7pod
+spec:
+  containers:
+  - image: nginx
+    name: t7pod
+    volumeMounts:
+    - name: projects-vol
+      mountPath: /projects
+      subPath: project1
+  volumes:
+  - name: projects-vol
+    persistentVolumeClaim:
+      claimName: t7claim
+```
 
-<details><summary>help</summary>
+Create a file in the directory:
+
+```bash
+k exec -it <podname> -- touch /mnt/projects/some.file
+```
+
 </details>

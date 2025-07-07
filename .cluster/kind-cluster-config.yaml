@@ -12,6 +12,8 @@ nodes:
   extraMounts:
   - hostPath: /workspaces/ckad/.cluster/mounts/data
     containerPath: /mnt/data
+  - hostPath: /workspaces/ckad/.cluster/mounts/projects
+    containerPath: /mnt/projects
   - hostPath: /workspaces/ckad/.cluster/mounts/storage
     containerPath: /tmp/storage
   extraPortMappings:
@@ -28,6 +30,8 @@ nodes:
   extraMounts:
   - hostPath: /workspaces/ckad/.cluster/mounts/data
     containerPath: /mnt/data
+  - hostPath: /workspaces/ckad/.cluster/mounts/projects
+    containerPath: /mnt/projects
   - hostPath: /workspaces/ckad/.cluster/mounts/storage
     containerPath: /tmp/storage
   - hostPath: /workspaces/ckad/.cluster/mounts/frontend
@@ -48,6 +52,8 @@ nodes:
   extraMounts:
   - hostPath: /workspaces/ckad/.cluster/mounts/data
     containerPath: /mnt/data
+  - hostPath: /workspaces/ckad/.cluster/mounts/projects
+    containerPath: /mnt/projects
   - hostPath: /workspaces/ckad/.cluster/mounts/storage
     containerPath: /tmp/storage
   - hostPath: /workspaces/ckad/.cluster/mounts/backend

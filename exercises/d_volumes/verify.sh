@@ -368,10 +368,61 @@ verify_task6() {
   return
 }
 
+function verify_task7() {
+  TASK_NUMBER="7"
+
+  # Fixed values
+  local expected_host_path="/mnt/projects"
+  local expected_requested_storage="2Gi"
+  local expected_sub_path="project1"
+  local expected_mount_path="/projects"
+  local expected_image_prefix="nginx"
+
+  # Step 1: Verify there is a PV that mounts /mnt/projects as hostPath path
+  local pv_name
+  pv_name=$(kubectl get pv -o json | jq -r --arg path "$expected_host_path" '.items[] | select(.spec.hostPath.path == $path) | .metadata.name') || { failed; return; }
+  [ -z "$pv_name" ] && { failed; return; }
+
+  local hostpath
+  hostpath=$(kubectl get pv "$pv_name" -o json | jq -r '.spec.hostPath.path') || { failed; return; }
+  [ "$hostpath" != "$expected_host_path" ] && { failed; return; }
+
+  # Step 2: Verify if there is a PVC that uses that PV and requests 2Gi of storage
+  local pvc_name
+  pvc_name=$(kubectl get pvc -o json | jq -r --arg pv_name "$pv_name" --arg requested_storage "$expected_requested_storage" '.items[] | select(.spec.volumeName == $pv_name and .spec.resources.requests.storage == $requested_storage) | .metadata.name') || { failed; return; }
+  [ -z "$pvc_name" ] && { failed; return; }
+
+  local requested_storage
+  requested_storage=$(kubectl get pvc "$pvc_name" -o json | jq -r '.spec.resources.requests.storage') || { failed; return; }
+  [ "$requested_storage" != "$expected_requested_storage" ] && { failed; return; }
+
+  # Step 3: Verify if there's a pod using that PVC and fulfills the requirements
+  local pod_name
+  pod_name=$(kubectl get pod -o json | jq -r --arg pvc_name "$pvc_name" '.items[] | select(.spec.volumes[]?.persistentVolumeClaim?.claimName == $pvc_name) | .metadata.name') || { failed; return; }
+  [ -z "$pod_name" ] && { failed; return; }
+
+  local subpath
+  subpath=$(kubectl get pod "$pod_name" -o json | jq -r --arg mount_path "$expected_mount_path" '.spec.containers[0].volumeMounts[] | select(.mountPath == $mount_path) | .subPath') || { failed; return; }
+  [ "$subpath" != "$expected_sub_path" ] && { failed; return; }
+
+  local image
+  image=$(kubectl get pod "$pod_name" -o json | jq -r '.spec.containers[0].image') || { failed; return; }
+  [[ "$image" != "$expected_image_prefix"* ]] && { failed; return; }
+
+  # Step 4: Verify there are files created inside the /mnt/projects folder in the container
+  local created_files
+  created_files=$(kubectl exec "$pod_name" -- bash -c "ls $expected_mount_path") || { failed; return; }
+  [ -z "$created_files" ] && { failed; return; }
+
+  # If all checks pass, task is solved
+  solved
+}
+
 verify_task1
 verify_task2
 verify_task3
 verify_task4
 verify_task5
 verify_task6
+verify_task7
 exit 0

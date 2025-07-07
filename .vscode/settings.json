@@ -22,13 +22,16 @@
     "dind",
     "envpod",
     "healthz",
+    "hostpath",
     "limitranges",
     "mkcd",
     "persistentvolumeclaims",
+    "podname",
     "resourcequotas",
     "securepassword",
     "tasknumber",
     "tolerations",
-    "toplevel"
+    "toplevel",
+    "vimrc"
   ]
 }
