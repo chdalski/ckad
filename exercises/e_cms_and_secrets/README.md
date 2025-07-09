@@ -383,7 +383,7 @@ Requirements:
 - Create a ConfigMap named `config-file` from the file `t8config.database`.
 - Create a Secret named `secret-env` from the key-value pairs in the file `t8secret.env`.
 - Create a Secret named `secret-file` from the file `t8secret.database`.
-- Create a Pod named `app-pod` with the image `redis:8.0.2` that.
+- Create a Pod named `app-pod` with the image `httpd:2.4` that.
   - Sets the following environment variables in the container:
     - `APP_ENV` from the `environment` key in ConfigMap `config-env`.
     - `APP_TITLE` from the `title` key in ConfigMap `config-env`.
@@ -419,7 +419,7 @@ metadata:
   namespace: files
 spec:
   containers:
-  - image: redis:8.0.2
+  - image: httpd:2.4
     name: app-pod
     env:
     - name: APP_ENV

@@ -21,8 +21,10 @@
     "cpus",
     "devcontainers",
     "dind",
+    "disktype",
     "envfrom",
     "envpod",
+    "envtest",
     "healthz",
     "hostpath",
     "keygen",
@@ -37,6 +39,7 @@
     "tasknumber",
     "tolerations",
     "toplevel",
+    "tostring",
     "vimrc"
   ]
 }

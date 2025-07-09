@@ -353,7 +353,7 @@ verify_task8() {
   local file_configmap_name="config-file"
   local file_secret_name="secret-file"
   local pod_name="app-pod"
-  local image="redis:8.0.2"
+  local image="httpd:2.4"
   local config_env_file="t8config.env"
   local env_key1="environment"
   local env_key2="title"
