@@ -48,7 +48,7 @@ verify_task2() {
 
   # Get deployment as JSON
   local deploy_json
-  deploy_json="$(kubectl get deployment "${deployment_name}" -n "${namespace}" -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment "${deployment_name}" -n "${namespace}" -o json 2>/dev/null)" || { failed; return; }
 
   # Check replicas
   local replicas
@@ -86,7 +86,7 @@ verify_task3() {
   local expected_replicas=4
   local deploy_json
 
-  deploy_json="$(kubectl get deployment ${deployment_name} -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment ${deployment_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Check number of replicas
   local replicas
@@ -111,7 +111,7 @@ verify_task4() {
   local deploy_json replicas events_json scaled_up scaled_down
 
   # Get deployment as JSON (only once)
-  deploy_json="$(kubectl get deployment "${deploy_name}" -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment "${deploy_name}" -o json 2>/dev/null)" || { failed; return; }
 
   # Check if deployment exists and is currently scaled to 2
   replicas="$(echo "${deploy_json}" | jq '.spec.replicas')" || { failed; return; }
@@ -121,7 +121,7 @@ verify_task4() {
   fi
 
   # Get events for the deployment (only once)
-  events_json="$(kubectl get event --field-selector involvedObject.kind=Deployment,involvedObject.name=${deploy_name} -o json)" || { failed; return; }
+  events_json="$(kubectl get event --field-selector involvedObject.kind=Deployment,involvedObject.name=${deploy_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Check for scale up event to 5
   scaled_up="$(echo "${events_json}" | jq -r --arg up_msg "Scaled up replica set" --argjson up_replicas "${expected_replicas_up}" \
@@ -157,7 +157,7 @@ verify_task5() {
   local expected_mem_req expected_mem_lim expected_replicas deploy_json
 
 
-  deploy_json="$(kubectl get deployment ${deploy_name} -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment ${deploy_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Check replicas
   local replicas
@@ -210,7 +210,7 @@ verify_task6() {
   local expected_env1_value="false"
 
   local deploy_json
-  deploy_json="$(kubectl get deployment ${deploy_name} -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment ${deploy_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Check deployment name
   local name
@@ -259,7 +259,7 @@ verify_task7() {
 
   # Get ConfigMap as JSON
   local configmap_json
-  configmap_json="$(kubectl get configmap ${configmap_name} -o json)" || { failed; return; }
+  configmap_json="$(kubectl get configmap ${configmap_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Verify ConfigMap key and value
   local actual_value
@@ -268,7 +268,7 @@ verify_task7() {
 
   # Get Deployment as JSON
   local deploy_json
-  deploy_json="$(kubectl get deployment ${deployment_name} -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment ${deployment_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Verify replicas
   local actual_replicas
@@ -301,13 +301,13 @@ verify_task8() {
   local replicas="1"
   local secret_json deploy_json found value
 
-  secret_json="$(kubectl get secret ${secret_name} -o json)" || { failed; return; }
+  secret_json="$(kubectl get secret ${secret_name} -o json 2>/dev/null)" || { failed; return; }
   found="$(echo "$secret_json" | jq -r ".data | has(\"${secret_key}\")")"
   [ "$found" = "true" ] || { failed; return; }
   value="$(echo "$secret_json" | jq -r ".data[\"${secret_key}\"]" | base64 -d)" || { failed; return; }
   [ "$value" = "$secret_value" ] || { failed; return; }
 
-  deploy_json="$(kubectl get deployment ${deploy_name} -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment ${deploy_name} -o json 2>/dev/null)" || { failed; return; }
   found="$(echo "$deploy_json" | jq -r ".spec.replicas")"
   [ "$found" = "$replicas" ] || { failed; return; }
   found="$(echo "$deploy_json" | jq -r ".spec.template.spec.containers[0].image")"
@@ -331,7 +331,7 @@ verify_task9() {
   local expected_probe_port=80
 
   local deploy_json
-  deploy_json="$(kubectl get deployment ${deploy_name} -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment ${deploy_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Check deployment name
   local name
@@ -371,7 +371,7 @@ verify_task10() {
   local expected_probe_period=11
 
   local deploy_json
-  deploy_json="$(kubectl get deployment ${deployment_name} -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment ${deployment_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Check deployment name
   local name
@@ -417,7 +417,7 @@ verify_task11() {
   local expected_replicas=3
   local deployment_json pod_template_labels selector_match_labels replicas image
 
-  deployment_json="$(kubectl get deployment ${deployment_name} -o json)" || { failed; return; }
+  deployment_json="$(kubectl get deployment ${deployment_name} -o json 2>/dev/null)" || { failed; return; }
 
   # Check replicas
   replicas="$(echo "${deployment_json}" | jq '.spec.replicas')" || { failed; return; }
@@ -449,7 +449,7 @@ verify_task12() {
   local expected_replicas=4
 
   local deployment_json
-  deployment_json="$(kubectl get deployment ${deployment_name} -n ${namespace} -o json)" || { failed; return; }
+  deployment_json="$(kubectl get deployment ${deployment_name} -n ${namespace} -o json 2>/dev/null)" || { failed; return; }
 
   # Check image
   local image
@@ -472,15 +472,15 @@ verify_task12() {
 
 verify_task13() {
   TASK_NUMBER="13"
-  local deployment_name expected_image expected_env_name expected_env_value deploy_json pod_name pod_json
 
-  deployment_name="pause-deploy"
-  expected_image="httpd:2.4"
-  expected_env_name="TEST"
-  expected_env_value="true"
+  local deployment_name="pause-deploy"
+  local expected_image="httpd:2.4"
+  local expected_env_name="TEST"
+  local expected_env_value="true"
+  local deploy_json pod_name pod_json
 
   # Get deployment as JSON
-  deploy_json="$(kubectl get deployment "${deployment_name}" -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment "${deployment_name}" -o json 2>/dev/null)" || { failed; return; }
 
   # 1. Verify deployment exists and has correct image
   echo "${deploy_json}" | jq -e --arg img "${expected_image}" \
@@ -497,7 +497,7 @@ verify_task13() {
   pod_name="$(kubectl get pods -l app="${deployment_name}" -o json | jq -r '.items[0].metadata.name')" || { failed; return; }
 
   # 5. Get the pod as JSON
-  pod_json="$(kubectl get pod "${pod_name}" -o json)" || { failed; return; }
+  pod_json="$(kubectl get pod "${pod_name}" -o json 2>/dev/null)" || { failed; return; }
 
   # 6. Verify the pod does NOT have the environment variable set
   echo "${pod_json}" | jq -e --arg name "${expected_env_name}" \
@@ -515,7 +515,7 @@ verify_task14() {
   local expected_replicas=2
 
   local deploy_json
-  deploy_json="$(kubectl get deployment "${deployment_name}" -o json)" || { failed; return; }
+  deploy_json="$(kubectl get deployment "${deployment_name}" -o json 2>/dev/null)" || { failed; return; }
 
   # Check image
   local image
@@ -546,7 +546,7 @@ verify_task15() {
   local expected_replicas=1
   local deployment_json main_image init_image init_command replicas
 
-  deployment_json="$(kubectl get deployment "${deployment_name}" -o json)" || { failed; return; }
+  deployment_json="$(kubectl get deployment "${deployment_name}" -o json 2>/dev/null)" || { failed; return; }
 
   replicas="$(echo "${deployment_json}" | jq '.spec.replicas')" || { failed; return; }
   [ "${replicas}" -eq "${expected_replicas}" ] || { failed; return; }
@@ -577,7 +577,7 @@ verify_task16() {
   local expected_replicas=2
   local deployment_json node_affinity_json replicas image node_affinity
 
-  deployment_json="$(kubectl get deployment ${deployment_name} -o json)" || { failed; return; }
+  deployment_json="$(kubectl get deployment ${deployment_name} -o json 2>/dev/null)" || { failed; return; }
 
   replicas="$(echo "${deployment_json}" | jq '.spec.replicas')" || { failed; return; }
   [ "${replicas}" -eq "${expected_replicas}" ] || { failed; return; }
@@ -595,6 +595,365 @@ verify_task16() {
   solved
 }
 
+verify_task17() {
+  TASK_NUMBER="17"
+
+  local expected_deploy="hostpath-deploy"
+  local expected_image="nginx:1.29"
+  local expected_host_path="/mnt/data"
+  local expected_mount_path="/mnt/logs"
+  local expected_replicas="1"
+
+  # Get deployment as JSON
+  local deploy_json
+  deploy_json="$(kubectl get deployment ${expected_deploy} -o json 2>/dev/null)" || { failed; return; }
+
+  # Check replicas
+  local replicas
+  replicas="$(echo "$deploy_json" | jq -r '.spec.replicas')" || { failed; return; }
+  [ "$replicas" = "$expected_replicas" ] || { failed; return; }
+
+  # Check container image
+  local image
+  image="$(echo "$deploy_json" | jq -r '.spec.template.spec.containers[0].image')" || { failed; return; }
+  [ "$image" = "$expected_image" ] || { failed; return; }
+
+  # Check volumeMounts and volumes
+  local volume_mounts_json
+  volume_mounts_json="$(echo "$deploy_json" | jq '.spec.template.spec.containers[0].volumeMounts')" || { failed; return; }
+  local volumes_json
+  volumes_json="$(echo "$deploy_json" | jq '.spec.template.spec.volumes')" || { failed; return; }
+
+  # Find the volumeMount with the expected mountPath
+  local mount_path
+  mount_path="$(echo "$volume_mounts_json" | jq -r '.[] | select(.mountPath=="'"$expected_mount_path"'") | .mountPath')" || { failed; return; }
+  [ "$mount_path" = "$expected_mount_path" ] || { failed; return; }
+
+  # Get the name of the volume mounted at the expected path
+  local volume_name
+  volume_name="$(echo "$volume_mounts_json" | jq -r '.[] | select(.mountPath=="'"$expected_mount_path"'") | .name')" || { failed; return; }
+
+  # Get the volume definition for that name
+  local claim_name
+  claim_name="$(echo "$volumes_json" | jq -r '.[] | select(.name=="'"$volume_name"'") | .persistentVolumeClaim.claimName')" || { failed; return; }
+  [ -n "$claim_name" ] || { failed; return; }
+
+  # Get the PVC as JSON
+  local pvc_json
+  pvc_json="$(kubectl get pvc "$claim_name" -o json 2>/dev/null)" || { failed; return; }
+
+  # Check PVC status is Bound
+  local pvc_status
+  pvc_status="$(echo "$pvc_json" | jq -r '.status.phase')" || { failed; return; }
+  [ "$pvc_status" = "Bound" ] || { failed; return; }
+
+  # Get the PV name from the PVC
+  local pv_name
+  pv_name="$(echo "$pvc_json" | jq -r '.spec.volumeName')" || { failed; return; }
+  [ -n "$pv_name" ] || { failed; return; }
+
+  # Get the PV as JSON
+  local pv_json
+  pv_json="$(kubectl get pv "$pv_name" -o json 2>/dev/null)" || { failed; return; }
+
+  # Check the hostPath.path in the PV
+  local host_path
+  host_path="$(echo "$pv_json" | jq -r '.spec.hostPath.path')" || { failed; return; }
+  [ "$host_path" = "$expected_host_path" ] || { failed; return; }
+
+  # Check all pods for the deployment are running
+  local pod_json
+  pod_json="$(kubectl get pods -l app=${expected_deploy} -o json 2>/dev/null)" || { failed; return; }
+  local pod_count
+  pod_count="$(echo "$pod_json" | jq '.items | length')" || { failed; return; }
+  [ "$pod_count" = "$expected_replicas" ] || { failed; return; }
+  local pod_running_count
+  pod_running_count="$(echo "$pod_json" | jq '[.items[] | select(.status.phase=="Running")] | length')" || { failed; return; }
+  [ "$pod_running_count" = "$expected_replicas" ] || { failed; return; }
+
+  # All checks passed
+  solved
+  return
+}
+
+verify_task18() {
+  TASK_NUMBER="18"
+
+  local expected_name="minready-deploy"
+  local expected_image="nginx:1.25"
+  local expected_minReadySeconds=10
+  local expected_replicas=2
+
+  local deploy_json
+  deploy_json=$(kubectl get deployment "$expected_name" -o json 2>/dev/null) || { failed; return; }
+
+  local name
+  name=$(echo "$deploy_json" | jq -r '.metadata.name') || { failed; return; }
+  [ "$name" = "$expected_name" ] || { failed; return; }
+
+  local replicas
+  replicas=$(echo "$deploy_json" | jq '.spec.replicas') || { failed; return; }
+  [ "$replicas" -eq "$expected_replicas" ] || { failed; return; }
+
+  local minReadySeconds
+  minReadySeconds=$(echo "$deploy_json" | jq '.spec.minReadySeconds') || { failed; return; }
+  [ "$minReadySeconds" -eq "$expected_minReadySeconds" ] || { failed; return; }
+
+  local image
+  image=$(echo "$deploy_json" | jq -r '.spec.template.spec.containers[0].image') || { failed; return; }
+  [ "$image" = "$expected_image" ] || { failed; return; }
+
+  solved
+  return
+}
+
+verify_task19() {
+  TASK_NUMBER="19"
+
+  local expected_name="deadline-deploy"
+  local expected_image="httpd:2.4"
+  local expected_progress_deadline=60
+  local expected_replicas=1
+
+  local deploy_json
+  deploy_json="$(kubectl get deployment ${expected_name} -o json 2>/dev/null)" || { failed; return; }
+
+  local name
+  name="$(echo "$deploy_json" | jq -r '.metadata.name')" || { failed; return; }
+  [ "$name" = "$expected_name" ] || { failed; return; }
+
+  local image
+  image="$(echo "$deploy_json" | jq -r '.spec.template.spec.containers[0].image')" || { failed; return; }
+  [ "$image" = "$expected_image" ] || { failed; return; }
+
+  local progress_deadline
+  progress_deadline="$(echo "$deploy_json" | jq -r '.spec.progressDeadlineSeconds')" || { failed; return; }
+  [ "$progress_deadline" -eq "$expected_progress_deadline" ] || { failed; return; }
+
+  local replicas
+  replicas="$(echo "$deploy_json" | jq -r '.spec.replicas')" || { failed; return; }
+  [ "$replicas" -eq "$expected_replicas" ] || { failed; return; }
+
+  solved
+  return
+}
+
+verify_task20() {
+  TASK_NUMBER="20"
+
+  local expected_name="rollingupdate-deploy"
+  local expected_image="nginx:1.25"
+  local expected_replicas=4
+  local expected_maxSurge="2"
+  local expected_maxUnavailable="1"
+
+  local deploy_json
+  deploy_json=$(kubectl get deployment "${expected_name}" -o json 2>/dev/null) || { failed; return; }
+
+  local name
+  name=$(echo "$deploy_json" | jq -r '.metadata.name') || { failed; return; }
+  [ "$name" = "$expected_name" ] || { failed; return; }
+
+  local replicas
+  replicas=$(echo "$deploy_json" | jq '.spec.replicas') || { failed; return; }
+  [ "$replicas" -eq "$expected_replicas" ] || { failed; return; }
+
+  local image
+  image=$(echo "$deploy_json" | jq -r '.spec.template.spec.containers[0].image') || { failed; return; }
+  [ "$image" = "$expected_image" ] || { failed; return; }
+
+  local strategy_type
+  strategy_type=$(echo "$deploy_json" | jq -r '.spec.strategy.type') || { failed; return; }
+  [ "$strategy_type" = "RollingUpdate" ] || { failed; return; }
+
+  local maxSurge
+  maxSurge=$(echo "$deploy_json" | jq -r '.spec.strategy.rollingUpdate.maxSurge') || { failed; return; }
+  [ "$maxSurge" = "$expected_maxSurge" ] || { failed; return; }
+
+  local maxUnavailable
+  maxUnavailable=$(echo "$deploy_json" | jq -r '.spec.strategy.rollingUpdate.maxUnavailable') || { failed; return; }
+  [ "$maxUnavailable" = "$expected_maxUnavailable" ] || { failed; return; }
+
+  solved
+  return
+}
+
+verify_task21() {
+  TASK_NUMBER="21"
+
+  local expected_namespace="rollout-demo"
+  local expected_deployment="rolling-update-demo"
+  local expected_image="nginx:1.29"
+  local expected_replicas=6
+  local expected_max_surge="2"
+  local expected_max_unavailable="50%"
+
+  # Get deployment as JSON
+  local deploy_json
+  deploy_json="$(kubectl get deployment "${expected_deployment}" -n "${expected_namespace}" -o json 2>/dev/null)" || { failed; return; }
+
+  # Check image
+  local image
+  image="$(echo "${deploy_json}" | jq -r '.spec.template.spec.containers[0].image')" || { failed; return; }
+  [ "${image}" = "${expected_image}" ] || { failed; return; }
+
+  # Check replicas
+  local replicas
+  replicas="$(echo "${deploy_json}" | jq '.spec.replicas')" || { failed; return; }
+  [ "${replicas}" -eq "${expected_replicas}" ] || { failed; return; }
+
+  # Check strategy type (should be RollingUpdate or default)
+  local strategy_type
+  strategy_type="$(echo "${deploy_json}" | jq -r '.spec.strategy.type // "RollingUpdate"')" || { failed; return; }
+  [ "${strategy_type}" = "RollingUpdate" ] || { failed; return; }
+
+  # Check maxSurge
+  local max_surge
+  max_surge="$(echo "${deploy_json}" | jq -r '.spec.strategy.rollingUpdate.maxSurge // "25%"')" || { failed; return; }
+  # Accept both "2" and 2 as valid values
+  if [ "${max_surge}" != "${expected_max_surge}" ]; then
+    # Also accept if maxSurge is an int and equals 2
+    if ! [[ "${max_surge}" =~ ^[0-9]+$ && "${max_surge}" -eq 2 ]]; then
+      failed; return;
+    fi
+  fi
+
+  # Check maxUnavailable
+  local max_unavailable
+  max_unavailable="$(echo "${deploy_json}" | jq -r '.spec.strategy.rollingUpdate.maxUnavailable // "25%"')" || { failed; return; }
+  # Accept both "50%" and 3 as valid values (since 50% of 6 is 3)
+  if [ "${max_unavailable}" != "${expected_max_unavailable}" ]; then
+    if ! [[ "${max_unavailable}" =~ ^[0-9]+$ && "${max_unavailable}" -eq 3 ]]; then
+      failed; return;
+    fi
+  fi
+
+  # Check rollout status
+  kubectl rollout status deployment "${expected_deployment}" -n "${expected_namespace}" --timeout=5s >/dev/null 2>/dev/null || { failed; return; }
+
+  solved
+}
+
+verify_task22() {
+  TASK_NUMBER="22"
+
+  local namespace="blue-green"
+  local deployment_green="blue-green-demo-green"
+  local deployment_blue="blue-green-demo-blue"
+  local service_name="blue-green-demo-svc"
+  local expected_image_green="nginx:1.29"
+  local expected_image_blue="nginx:1.25"
+  local expected_selector_app="blue-green-demo"
+  local expected_selector_version="green"
+
+  # Check if the green deployment exists with correct image and labels
+  local deployment_green_json
+  deployment_green_json="$(kubectl get deployment ${deployment_green} -n ${namespace} -o json 2>/dev/null)" || { failed; return; }
+  echo "${deployment_green_json}" | jq -e '.metadata.name == "'${deployment_green}'"' >/dev/null || { failed; return; }
+  echo "${deployment_green_json}" | jq -e '.spec.template.spec.containers[0].image == "'${expected_image_green}'"' >/dev/null || { failed; return; }
+  echo "${deployment_green_json}" | jq -e '.spec.selector.matchLabels.app == "'${expected_selector_app}'"' >/dev/null || { failed; return; }
+  echo "${deployment_green_json}" | jq -e '.spec.selector.matchLabels.version == "green"' >/dev/null || { failed; return; }
+  echo "${deployment_green_json}" | jq -e '.spec.template.metadata.labels.app == "'${expected_selector_app}'"' >/dev/null || { failed; return; }
+  echo "${deployment_green_json}" | jq -e '.spec.template.metadata.labels.version == "green"' >/dev/null || { failed; return; }
+
+  # Check if the blue deployment still exists with correct image and labels
+  local deployment_blue_json
+  deployment_blue_json="$(kubectl get deployment ${deployment_blue} -n ${namespace} -o json 2>/dev/null)" || { failed; return; }
+  echo "${deployment_blue_json}" | jq -e '.metadata.name == "'${deployment_blue}'"' >/dev/null || { failed; return; }
+  echo "${deployment_blue_json}" | jq -e '.spec.template.spec.containers[0].image == "'${expected_image_blue}'"' >/dev/null || { failed; return; }
+  echo "${deployment_blue_json}" | jq -e '.spec.selector.matchLabels.app == "'${expected_selector_app}'"' >/dev/null || { failed; return; }
+  echo "${deployment_blue_json}" | jq -e '.spec.selector.matchLabels.version == "blue"' >/dev/null || { failed; return; }
+  echo "${deployment_blue_json}" | jq -e '.spec.template.metadata.labels.app == "'${expected_selector_app}'"' >/dev/null || { failed; return; }
+  echo "${deployment_blue_json}" | jq -e '.spec.template.metadata.labels.version == "blue"' >/dev/null || { failed; return; }
+
+  # Check if the service selector points to the green deployment
+  local service_json
+  service_json="$(kubectl get service ${service_name} -n ${namespace} -o json 2>/dev/null)" || { failed; return; }
+  echo "${service_json}" | jq -e '.spec.selector.app == "'${expected_selector_app}'"' >/dev/null || { failed; return; }
+  echo "${service_json}" | jq -e '.spec.selector.version == "'${expected_selector_version}'"' >/dev/null || { failed; return; }
+
+  solved
+  return
+}
+
+verify_task23() {
+  TASK_NUMBER="23"
+  local namespace="canary-demo"
+  local canary_deployment="canary-demo-canary"
+  local stable_deployment="canary-demo-stable"
+  local service_name="canary-demo-svc"
+  local canary_image="nginx:1.25"
+  local stable_image="nginx:1.21"
+  local canary_replicas=3
+  local service_port=80
+  local service_target_port=80
+
+  # Get Deployments JSON
+  local deployments_json
+  deployments_json=$(kubectl get deployments -n "$namespace" -o json 2>/dev/null) || { failed; return; }
+
+  # Check canary deployment exists and has correct spec
+  local canary_json
+  canary_json=$(echo "$deployments_json" | jq -e \
+    --arg name "$canary_deployment" \
+    '.items[] | select(.metadata.name == $name)') || { failed; return; }
+
+  echo "$canary_json" | jq -e \
+    --arg image "$canary_image" \
+    --argjson replicas "$canary_replicas" \
+    '.spec.replicas == $replicas and .spec.template.spec.containers[0].image == $image' >/dev/null || { failed; return; }
+
+  # Check canary deployment has correct labels
+  echo "$canary_json" | jq -e '.spec.template.metadata.labels.app == "canary-demo"' >/dev/null || { failed; return; }
+  echo "$canary_json" | jq -e '.spec.template.metadata.labels.track == "canary"' >/dev/null || { failed; return; }
+
+  # Check stable deployment: either deleted or has 0 replicas and correct image
+  local stable_json
+  stable_json=$(echo "$deployments_json" | jq -e \
+    --arg name "$stable_deployment" \
+    '.items[] | select(.metadata.name == $name)') 2>/dev/null
+
+  if [ -n "$stable_json" ]; then
+    echo "$stable_json" | jq -e \
+      --arg image "$stable_image" \
+      '.spec.replicas == 0 and .spec.template.spec.containers[0].image == $image' >/dev/null || { failed; return; }
+    echo "$stable_json" | jq -e '.spec.template.metadata.labels.app == "canary-demo"' >/dev/null || { failed; return; }
+    echo "$stable_json" | jq -e '.spec.template.metadata.labels.track == "stable"' >/dev/null || { failed; return; }
+  fi
+
+  # Get Service JSON
+  local service_json
+  service_json=$(kubectl get service "$service_name" -n "$namespace" -o json 2>/dev/null) || { failed; return; }
+
+  # Check service ports
+  echo "$service_json" | jq -e \
+    --argjson port "$service_port" \
+    --argjson targetPort "$service_target_port" \
+    '.spec.ports[0].port == $port and .spec.ports[0].targetPort == $targetPort' >/dev/null || { failed; return; }
+
+  # Check service selector: either only app: canary-demo, or matches canary deployment's matchLabels
+  local selector_json
+  selector_json=$(echo "$service_json" | jq '.spec.selector')
+
+  local canary_matchlabels_json
+  canary_matchlabels_json=$(echo "$canary_json" | jq '.spec.selector.matchLabels')
+
+  # Acceptable if selector is only {"app":"canary-demo"}
+  local only_app_selector
+  only_app_selector=$(echo "$selector_json" | jq -e 'keys == ["app"] and .app == "canary-demo"' 2>/dev/null)
+
+  # Acceptable if selector matches canary deployment's matchLabels
+  local matches_canary_labels
+  matches_canary_labels=$(jq --argjson s "$selector_json" --argjson m "$canary_matchlabels_json" -n '$s == $m' 2>/dev/null)
+
+  if [ "$only_app_selector" != "true" ] && [ "$matches_canary_labels" != "true" ]; then
+    failed
+    return
+  fi
+
+  solved
+  return
+}
 
 verify_task1
 verify_task2
@@ -612,4 +971,11 @@ verify_task13
 verify_task14
 verify_task15
 verify_task16
+verify_task17
+verify_task18
+verify_task19
+verify_task20
+verify_task21
+verify_task22
+verify_task23
 exit 0

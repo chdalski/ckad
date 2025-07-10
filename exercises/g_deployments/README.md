@@ -659,12 +659,75 @@ _Objective_: Use a hostPath volume in a deployment.
 
 Requirements:
 
-- Create a deployment named `hostpath-deploy`.
-- Use the image `alpine:3.20`.
-- Mount the host path `/data/logs` to the container path `/mnt/logs`.
+- Create a Deployment named `hostpath-deploy`.
+- Use the image `nginx:1.29`.
+- Mount the host path `/mnt/data` to the container path `/mnt/logs`.
 - Set replicas to 1.
 
 <details><summary>help</summary>
+
+Create the PersistentVolume:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: data-pv
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: standard
+  capacity:
+    storage: 2Gi
+  hostPath:
+    path: /mnt/data
+```
+
+Create the PersistentVolumeClaim:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: data-pv
+```
+
+Create the Deployment template:
+
+```bash
+k create deploy hostpath-deploy --image nginx:1.29 --replicas 1 --dry-run=client -o yaml > t17deploy.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+# ...
+spec:
+  replicas: 1
+  # ...
+  template:
+    # ...
+    spec:
+      containers:
+      - image: nginx:1.29
+        name: nginx
+        volumeMounts:
+        - name: data
+          mountPath: /mnt/logs
+        # ...
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: data-pvc
+```
 
 </details>
 
@@ -681,6 +744,24 @@ Requirements:
 
 <details><summary>help</summary>
 
+Create the Deployment template:
+
+```bash
+k create deploy minready-deploy --image nginx:1.25 --replicas 2 --dry-run=client -o yaml > t18deploy.yaml
+```
+
+Edit the template and update the container definition (snippet):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+# ...
+spec:
+  replicas: 2
+  minReadySeconds: 10
+  # ...
+```
+
 </details>
 
 ## Task 19
@@ -696,6 +777,26 @@ Requirements:
 
 <details><summary>help</summary>
 
+Create the Deployment template:
+
+```bash
+k create deploy deadline-deploy --image httpd:2.4 --replicas 1 --dry-run=client -o yaml > t19deploy.yaml
+```
+
+Edit the template and update the container definition (snippet):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+# ...
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 60
+  # ...
+  template:
+    # ...
+```
+
 </details>
 
 ## Task 20
@@ -710,5 +811,284 @@ Requirements:
 - Set replicas to 4.
 
 <details><summary>help</summary>
+
+Create the Deployment template:
+
+```bash
+k create deploy rollingupdate-deploy --image nginx:1.25 --replicas 4 --dry-run=client -o yaml > t20deploy.yaml
+```
+
+Edit the template and update the container definition (snippet):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+# ...
+spec:
+  replicas: 4
+  # ...
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  template:
+    # ...
+```
+
+</details>
+
+## Task 21
+
+_Objective_: Perform a rolling update on an existing Deployment.
+
+Requirements:
+
+- Update the `rolling-update-demo` Deployment in the `rollout-demo` namespace to use the image `nginx:1.29`.
+- Ensure zero downtime during the update.
+- Configure the Deployment so that at least 50% of the pods are always available during the update.
+- No more than 2 extra pods should be created above the desired replica count during the update.
+- Verify the rollout status.
+
+<details><summary>help</summary>
+
+Edit the Deployment:
+
+```bash
+k edit -n rollout-demo deploy rolling-update-demo
+```
+
+Update the definition (snippet):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+# ...
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 6
+  # ...
+  strategy:
+    rollingUpdate:
+      # maxSurge: 25%
+      maxSurge: 2 # ensures that no more than 2 extra pods are created above the desired replica count.
+      # maxUnavailable: 25%
+      maxUnavailable: 50% # ensures that at least 3 pods are always available (since 6 - 3 = 3).
+    type: RollingUpdate
+  template:
+    # ...
+    spec:
+      containers:
+      # - image: nginx:1.25
+      - image: nginx:1.29
+      # ...
+```
+
+</details>
+
+## Task 22
+
+_Objective_: Implement a blue-green deployment.
+
+Requirements:
+
+- Create a new Deployment named `blue-green-demo-green` in the `blue-green` namespace using image `nginx:1.29`.
+- The existing Deployment `blue-green-demo-blue` (see YAML below) is already running with image `nginx:1.25`.
+- Switch traffic from `blue-green-demo-blue` to `blue-green-demo-green` by updating the Service selector.
+
+__Predefined Resources:__
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue-green-demo-blue
+  namespace: blue-green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blue-green-demo
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: blue-green-demo
+        version: blue
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.25
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blue-green-demo-svc
+  namespace: blue-green
+spec:
+  selector:
+    app: blue-green-demo
+    version: blue
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+<details><summary>help</summary>
+
+Copy the predefined resource template for the Deployment and update it as required:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue-green-demo-green # update the name
+  namespace: blue-green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blue-green-demo
+      version: green # update the version
+  template:
+    metadata:
+      labels:
+        app: blue-green-demo
+        version: green # update the version
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.29 # update the image
+```
+
+Edit the Service, with:
+
+```bash
+k edit svc -n blue-green blue-green-demo-svc
+```
+
+Replace the version in the selector (snippet):
+
+```yaml
+apiVersion: v1
+kind: Service
+# ...
+spec:
+  # ...
+  selector:
+    app: blue-green-demo
+    version: green
+  # ...
+```
+
+</details>
+
+## Task 23
+
+_Objective_: Perform a canary deployment.
+
+Requirements:
+
+- Create a new Deployment named `canary-demo-canary` in the `canary-demo` namespace using image `nginx:1.25` with 1 replica.
+- The existing Deployment `canary-demo-stable` (see YAML below) is running with image `nginx:1.21` and 3 replicas.
+- Update the Service to send traffic to both Deployments.
+- After validation, scale up the canary Deployment and scale down the stable Deployment to complete the rollout.
+
+__Predefined Resources:__
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-demo-stable
+  namespace: canary-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: canary-demo
+      track: stable
+  template:
+    metadata:
+      labels:
+        app: canary-demo
+        track: stable
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.21
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-demo-svc
+  namespace: canary-demo
+spec:
+  selector:
+    app: canary-demo
+    track: stable
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+<details><summary>help</summary>
+
+Copy the predefined resource template for the Deployment and update it as required:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-demo-canary # update
+  namespace: canary-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canary-demo
+      track: canary # update
+  template:
+    metadata:
+      labels:
+        app: canary-demo
+        track: canary # update
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.25 # update
+```
+
+Edit the Service, with:
+
+```bash
+k edit svc -n canary-demo canary-demo-svc
+```
+
+Remove the track from selector (snippet):
+
+```yaml
+apiVersion: v1
+kind: Service
+# ...
+spec:
+  # ...
+  selector:
+    app: canary-demo # The app selector matches both Deployments.
+  # ...
+```
+
+To verify if it works as expected:
+
+```bash
+k run -it --rm --restart Never test-conn -n canary-demo --image busybox:1.37 --command -- sh -c "wget -S canary-demo-svc.canary-demo.svc.cluster.local" | grep -i server:
+```
+
+Scale up the canary Deployment and scale down the stable Deployment:
+
+```bash
+kubectl -n canary-demo scale deployment canary-demo-canary --replicas=3
+kubectl -n canary-demo scale deployment canary-demo-stable --replicas=0
+```
 
 </details>
