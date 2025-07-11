@@ -3,152 +3,352 @@
 # shellcheck source=../../.scripts/verify.sh
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
+# shellcheck disable=SC2317
 verify_task1() {
   TASK_NUMBER="1"
+
+  # Expected values
   local namespace="ckad"
 
-  if kubectl get ns "$namespace" &> /dev/null; then
-    solved
-  else
+  # Check if the expected namespace exists by retrieving its JSON
+  debug "Verifying that namespace '$namespace' exists."
+  kubectl get ns "$namespace" -o json > /dev/null 2>&1 || {
+    debug "Failed to retrieve namespace '$namespace'. Expected namespace to exist."
     failed
-  fi
+    return
+  }
+
+  debug "Namespace '$namespace' exists. Verification successful."
+  solved
+  return
 }
 
+# shellcheck disable=SC2317
 verify_task2() {
   TASK_NUMBER="2"
-  local namespace="foo"
 
-  if [ ! -f ./"$namespace".yaml ]; then
+  # Expected values
+  local namespace="foo"
+  local yaml_file="./${namespace}.yaml"
+
+  # Check if the expected YAML file exists
+  debug "Checking if file '$yaml_file' exists."
+  [ -f "$yaml_file" ] || {
+    debug "File '$yaml_file' does not exist. Expected file to be present."
     failed
     return
-  fi
+  }
 
-  if kubectl get ns "$namespace" &> /dev/null; then
-    solved
-  else
+  # Check if the expected namespace exists by retrieving its JSON
+  debug "Verifying that namespace '$namespace' exists."
+  kubectl get ns "$namespace" -o json > /dev/null 2>&1 || {
+    debug "Failed to retrieve namespace '$namespace'. Expected namespace to exist."
     failed
-  fi
+    return
+  }
+
+  debug "File '$yaml_file' exists and namespace '$namespace' exists. Verification successful."
+  solved
   return
 }
 
+# shellcheck disable=SC2317
 verify_task3() {
   TASK_NUMBER="3"
+
+  # Expected values
   local namespace="foo"
+  local expected_annotation_hello="world"
+  local expected_annotation_learning="kubernetes"
 
-  local annotation_hello
-  annotation_hello=$(kubectl get ns ${namespace} -o jsonpath="{.metadata.annotations.hello}" 2> /dev/null)
-  if [ "${annotation_hello}" != "world" ]; then
+  # Retrieve the namespace JSON once
+  debug "Retrieving JSON for namespace '$namespace'."
+  local ns_json
+  ns_json="$(kubectl get ns "$namespace" -o json 2>/dev/null)" || {
+    debug "Failed to retrieve namespace '$namespace'. Expected namespace to exist."
+    failed
+    return
+  }
+
+  # Check the 'hello' annotation
+  debug "Checking if annotation 'hello' is set to '$expected_annotation_hello'."
+  local rs_annotation_hello
+  rs_annotation_hello="$(echo "$ns_json" | jq -r '.metadata.annotations.hello // empty' 2>/dev/null)" || {
+    debug "Failed to parse 'hello' annotation from namespace JSON."
+    failed
+    return
+  }
+  if [ "$rs_annotation_hello" != "$expected_annotation_hello" ]; then
+    debug "Annotation 'hello' mismatch. Expected '$expected_annotation_hello', found '$rs_annotation_hello'."
     failed
     return
   fi
 
-  local annotation_learning
-  annotation_learning=$(kubectl get ns ${namespace} -o jsonpath="{.metadata.annotations.learning}" 2> /dev/null)
-  if [ "${annotation_learning}" == "kubernetes" ]; then
+  # Check the 'learning' annotation
+  debug "Checking if annotation 'learning' is set to '$expected_annotation_learning'."
+  local rs_annotation_learning
+  rs_annotation_learning="$(echo "$ns_json" | jq -r '.metadata.annotations.learning // empty' 2>/dev/null)" || {
+    debug "Failed to parse 'learning' annotation from namespace JSON."
+    failed
+    return
+  }
+  if [ "$rs_annotation_learning" != "$expected_annotation_learning" ]; then
+    debug "Annotation 'learning' mismatch. Expected '$expected_annotation_learning', found '$rs_annotation_learning'."
     failed
     return
   fi
 
+  debug "All required annotations are present and correct. Verification successful."
   solved
   return
 }
 
+# shellcheck disable=SC2317
 verify_task4() {
   TASK_NUMBER="4"
+
+  # Expected values
   local namespace="foo"
+  local annotations_file="${namespace}-annotations-jq.json"
 
-  local file
-  file="${namespace}-annotations-jq.json"
-  local json
-  json=$(kubectl get ns ${namespace} -o json  2> /dev/null)
-  if diff <(echo "${json}" | jq .metadata.annotations) -u ./${file} &> /dev/null; then
-    solved
-  else
-    failed
-  fi
-}
-
-verify_task5() {
-  TASK_NUMBER="5"
-  local namespace="foo"
-
-  local file
-  file="${namespace}-annotations-jsonpath.json"
-  local annotations
-  annotations=$(kubectl get ns ${namespace} -o jsonpath="{.metadata.annotations}" 2> /dev/null)
-  if diff <(echo -n "${annotations}") -u ./${file} &> /dev/null; then
-    solved
-  else
-    failed
-  fi
-}
-
-verify_task6() {
-  TASK_NUMBER="6"
-  local file="all-namespaces.txt"
-
-  if diff <(kubectl get ns -o name) -u ./${file} &> /dev/null; then
-    solved
-  else
-    failed
-  fi
-}
-
-verify_task7() {
-  TASK_NUMBER="7"
-  local namespace="blueberry"
-
-  local line_length
-  line_length=$(kubectl get -n ${namespace} resourcequotas berry-quota -o jsonpath="{.spec.hard}" | wc -L)
-  if [ "${line_length}" != "36" ]; then
+  # Check if the expected annotations file exists
+  debug "Checking if file '$annotations_file' exists."
+  [ -f "$annotations_file" ] || {
+    debug "File '$annotations_file' does not exist. Expected file to be present."
     failed
     return
-  fi
+  }
 
-  local cpu
-  cpu=$(kubectl get -n ${namespace} resourcequotas berry-quota -o jsonpath="{.spec.hard.cpu}" 2> /dev/null)
-  if [ "${cpu}" != "2" ]; then
+  # Retrieve the namespace JSON once
+  debug "Retrieving JSON for namespace '$namespace'."
+  local ns_json
+  ns_json="$(kubectl get ns "$namespace" -o json 2>/dev/null)" || {
+    debug "Failed to retrieve namespace '$namespace'. Expected namespace to exist."
     failed
     return
-  fi
+  }
 
-  local pods
-  pods=$(kubectl get -n ${namespace} resourcequotas berry-quota -o jsonpath="{.spec.hard.pods}" 2> /dev/null)
-  if [ "${pods}" != "3" ]; then
+  # Extract annotations from the namespace JSON
+  debug "Extracting annotations from namespace JSON."
+  local ns_annotations_json
+  ns_annotations_json="$(echo "$ns_json" | jq '.metadata.annotations' 2>/dev/null)" || {
+    debug "Failed to extract annotations from namespace JSON."
     failed
     return
-  fi
+  }
 
-  local memory
-  memory=$(kubectl get -n ${namespace} resourcequotas berry-quota -o jsonpath="{.spec.hard.memory}" 2> /dev/null)
-  if [ "${memory}" != "2G" ]; then
+  # Compare extracted annotations with the expected file
+  debug "Comparing extracted annotations with file '$annotations_file'."
+  diff <(echo "$ns_annotations_json") "$annotations_file" > /dev/null 2>&1 || {
+    debug "Annotations do not match. Expected contents of '$annotations_file' to match extracted annotations."
     failed
     return
-  fi
+  }
 
+  debug "Annotations match the expected file. Verification successful."
   solved
   return
 }
 
-verify_task8() {
-  TASK_NUMBER="8"
-  local namespace="sunshine"
+# shellcheck disable=SC2317
+verify_task5() {
+  TASK_NUMBER="5"
 
-  local result
-  result=$(kubectl apply -f "$(git rev-parse --show-toplevel)/.templates/a_namespaces/task8/limits.yaml" -n ${namespace} 2> /dev/null)
-  if  echo "$result" | grep -qi unchanged; then
-    solved
-  else
+  # Expected values
+  local namespace="foo"
+  local annotations_file="${namespace}-annotations-jsonpath.json"
+
+  # Check if the expected annotations file exists
+  debug "Checking if file '$annotations_file' exists."
+  [ -f "$annotations_file" ] || {
+    debug "File '$annotations_file' does not exist. Expected file to be present."
     failed
-  fi
+    return
+  }
+
+  # Retrieve the namespace annotations using jsonpath
+  debug "Retrieving annotations for namespace '$namespace' using jsonpath."
+  local ns_annotations
+  ns_annotations="$(kubectl get ns "$namespace" -o jsonpath='{.metadata.annotations}' 2>/dev/null)" || {
+    debug "Failed to retrieve annotations for namespace '$namespace' using jsonpath."
+    failed
+    return
+  }
+
+  # Compare retrieved annotations with the expected file
+  debug "Comparing retrieved annotations with file '$annotations_file'."
+  diff <(echo -n "$ns_annotations") "$annotations_file" > /dev/null 2>&1 || {
+    debug "Annotations do not match. Expected contents of '$annotations_file' to match retrieved annotations."
+    failed
+    return
+  }
+
+  debug "Annotations match the expected file. Verification successful."
+  solved
+  return
 }
 
-verify_task1
-verify_task2
-verify_task3
-verify_task4
-verify_task5
-verify_task6
-verify_task7
-verify_task8
+# shellcheck disable=SC2317
+verify_task6() {
+  TASK_NUMBER="6"
+
+  # Expected values
+  local file="all-namespaces.txt"
+
+  # Check if the expected file exists
+  debug "Checking if file '$file' exists."
+  [ -f "$file" ] || {
+    debug "File '$file' does not exist. Expected file to be present."
+    failed
+    return
+  }
+
+  # Retrieve all namespaces by name
+  debug "Retrieving all namespaces using 'kubectl get ns -o name'."
+  local all_ns
+  all_ns="$(kubectl get ns -o name 2>/dev/null)" || {
+    debug "Failed to retrieve namespaces using 'kubectl get ns -o name'."
+    failed
+    return
+  }
+
+  # Compare retrieved namespaces with the expected file
+  debug "Comparing retrieved namespaces with file '$file'."
+  diff <(echo "$all_ns") "$file" > /dev/null 2>&1 || {
+    debug "Namespaces do not match. Expected contents of '$file' to match retrieved namespaces."
+    failed
+    return
+  }
+
+  debug "Namespaces match the expected file. Verification successful."
+  solved
+  return
+}
+
+# shellcheck disable=SC2317
+verify_task7() {
+  TASK_NUMBER="7"
+
+  # Expected values
+  local namespace="blueberry"
+  local rq_name="berry-quota"
+  local expected_line_length="36"
+  local expected_cpu="2"
+  local expected_pods="3"
+  local expected_memory="2G"
+
+  # Retrieve the resourcequota JSON once
+  debug "Retrieving JSON for resourcequota '$rq_name' in namespace '$namespace'."
+  local rq_json
+  rq_json="$(kubectl get -n "$namespace" resourcequotas "$rq_name" -o json 2>/dev/null)" || {
+    debug "Failed to retrieve resourcequota '$rq_name' in namespace '$namespace'."
+    failed
+    return
+  }
+
+  # Check the length of the .spec.hard line
+  debug "Checking the maximum line length of '.spec.hard'."
+  local rs_line_length
+  rs_line_length="$(echo "$rq_json" | jq -c '.spec.hard' 2>/dev/null | wc -L)" || {
+    debug "Failed to calculate line length of '.spec.hard'."
+    failed
+    return
+  }
+  if [ "$rs_line_length" != "$expected_line_length" ]; then
+    debug "Line length mismatch for '.spec.hard'. Expected '$expected_line_length', found '$rs_line_length'."
+    failed
+    return
+  fi
+
+  # Check the cpu value
+  debug "Checking if '.spec.hard.cpu' is set to '$expected_cpu'."
+  local rs_cpu
+  rs_cpu="$(echo "$rq_json" | jq -r '.spec.hard.cpu // empty' 2>/dev/null)" || {
+    debug "Failed to extract '.spec.hard.cpu' from resourcequota JSON."
+    failed
+    return
+  }
+  if [ "$rs_cpu" != "$expected_cpu" ]; then
+    debug "CPU value mismatch. Expected '$expected_cpu', found '$rs_cpu'."
+    failed
+    return
+  fi
+
+  # Check the pods value
+  debug "Checking if '.spec.hard.pods' is set to '$expected_pods'."
+  local rs_pods
+  rs_pods="$(echo "$rq_json" | jq -r '.spec.hard.pods // empty' 2>/dev/null)" || {
+    debug "Failed to extract '.spec.hard.pods' from resourcequota JSON."
+    failed
+    return
+  }
+  if [ "$rs_pods" != "$expected_pods" ]; then
+    debug "Pods value mismatch. Expected '$expected_pods', found '$rs_pods'."
+    failed
+    return
+  fi
+
+  # Check the memory value
+  debug "Checking if '.spec.hard.memory' is set to '$expected_memory'."
+  local rs_memory
+  rs_memory="$(echo "$rq_json" | jq -r '.spec.hard.memory // empty' 2>/dev/null)" || {
+    debug "Failed to extract '.spec.hard.memory' from resourcequota JSON."
+    failed
+    return
+  }
+  if [ "$rs_memory" != "$expected_memory" ]; then
+    debug "Memory value mismatch. Expected '$expected_memory', found '$rs_memory'."
+    failed
+    return
+  fi
+
+  debug "All resourcequota values are correct. Verification successful."
+  solved
+  return
+}
+
+# shellcheck disable=SC2317
+verify_task8() {
+  TASK_NUMBER="8"
+
+  # Expected values
+  local namespace="sunshine"
+  local limits_file
+  limits_file="$(git rev-parse --show-toplevel)/.templates/a_namespaces/task8/limits.yaml"
+
+  # Apply the limits.yaml file in the specified namespace and check for 'unchanged'
+  debug "Applying '$limits_file' in namespace '$namespace' and checking if resources are unchanged."
+  local apply_result
+  apply_result="$(kubectl apply -f "$limits_file" -n "$namespace" 2>/dev/null)" || {
+    debug "Failed to apply '$limits_file' in namespace '$namespace'."
+    failed
+    return
+  }
+
+  # Check if the output contains 'unchanged'
+  debug "Checking if the apply result indicates resources are unchanged."
+  echo "$apply_result" | grep -qi unchanged || {
+    debug "Resources were not unchanged after applying '$limits_file'. Expected 'unchanged' in output. Output was: $apply_result"
+    failed
+    return
+  }
+
+  debug "Resources were unchanged after applying '$limits_file'. Verification successful."
+  solved
+  return
+}
+
+# shellcheck disable=SC2034
+VERIFY_TASK_FUNCTIONS=(
+  verify_task1
+  verify_task2
+  verify_task3
+  verify_task4
+  verify_task5
+  verify_task6
+  verify_task7
+  verify_task8
+)
+run_verification VERIFY_TASK_FUNCTIONS "$@"
+
 exit 0

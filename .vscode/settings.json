@@ -38,6 +38,7 @@
     "podname",
     "replicaset",
     "replicasets",
+    "resourcequota",
     "resourcequotas",
     "rollingupdate",
     "securepassword",
