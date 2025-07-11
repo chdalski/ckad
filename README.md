@@ -9,7 +9,7 @@ If you want to use the exercises in the "intended way" you need to install:
 - a Container runtime like Docker
 - Visual Studio Code
 
-However it should be possible to just try to solve the exercises on any kubernetes clusters (but I didn't try it).
+However, it should be possible to just try to solve the exercises on any kubernetes clusters (untested).
 
 ## Using the exercises
 
@@ -27,7 +27,7 @@ When VS Code is ready the workflow to use the exercises is always the same:
   - This always checks all tasks but can be used whenever you want
 
 __Note:__
-Using drag and drop you can split your view between a terminal window and the exercise Readme.
+Using drag and drop you can split your view between a terminal window and the exercise README.
 
 ![VS Code Split View](.images/vscode_splitview.png)
 
