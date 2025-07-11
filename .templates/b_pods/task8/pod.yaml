@@ -8,7 +8,7 @@ spec:
   containers:
   - name: liveness
     image: busybox:1.37.0
-    args:
+    command:
     - /bin/sh
     - -c
     - rm -rf /tmp/healthy; sleep 15; touch /tmp/healthy; sleep 7200
@@ -20,4 +20,4 @@ spec:
       initialDelaySeconds: 5
       periodSeconds: 5
       failureThreshold: 1
-    restartPolicy: Never
+  restartPolicy: Never

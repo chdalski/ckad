@@ -48,7 +48,7 @@ Create a pod named `envpod` with a container named `ckadenv`, image `nginx` and 
 
 <details><summary>help</summary>
 
-Create the yaml file (i. e. `t4pod.yaml`).
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -64,12 +64,6 @@ spec:
       value: task4
 ```
 
-Apply the yaml file (i. e. `t4pod.yaml`).
-
-```bash
-k apply -f t4pod.yaml
-```
-
 </details>
 
 ## Task 5
@@ -79,7 +73,7 @@ Also make sure the container always restarts and configure it to run the command
 
 <details><summary>help</summary>
 
-Create the yaml file (i. e. `t5pod.yaml`).
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -97,12 +91,6 @@ spec:
   restartPolicy: Always
 ```
 
-Apply the yaml file (i. e. `t5pod.yaml`).
-
-```bash
-k apply -f t5pod.yaml
-```
-
 </details>
 
 ## Task 6
@@ -116,7 +104,7 @@ Define a container named `nginx` with image `nginx:1.21` and mount the shared vo
 
 <details><summary>help</summary>
 
-Create the yaml file (i. e. `t6pod.yaml`).
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -143,12 +131,6 @@ spec:
     emptyDir: {}
 ```
 
-Apply the yaml file (i. e. `t6pod.yaml`).
-
-```bash
-k apply -f t6pod.yaml
-```
-
 </details>
 
 ## Task 7
@@ -168,7 +150,7 @@ Make sure the directory `/var/log` is persistent between containers using an `em
 __Note:__
 sidecar containers are implemented as init containers with restart policy set to "Always", see the [docs](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/#sidecar-containers-and-pod-lifecycle) for more details.
 
-Create the yaml file (i. e. `t7pod.yaml`).
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -201,12 +183,6 @@ spec:
     - name: logs
       mountPath: /var/log
     restartPolicy: Always
-```
-
-Apply the yaml file (i. e. `t7pod.yaml`).
-
-```bash
-k apply -f t7pod.yaml
 ```
 
 </details>
@@ -277,7 +253,7 @@ The probe should be run every `5` seconds.
 
 <details><summary>help</summary>
 
-Create the yaml file (i. e. `t9pod.yaml`).
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -302,12 +278,6 @@ spec:
   - name: config-vol
     configMap:
       name: nginx-health
-```
-
-Apply the yaml file (i. e. `t9pod.yaml`).
-
-```bash
-k apply -f t9pod.yaml
 ```
 
 </details>
@@ -426,7 +396,7 @@ Modify the template and update the resources section for the container to not ex
 ## Task 13
 
 Create a pod named `secret-logger` that reads the key `msg` of secret `task13-secret` to an environment variable.
-Print the secret to `stdout` one time.
+Print the secret to `stdout` only once.
 
 <details><summary>help</summary>
 
@@ -475,12 +445,6 @@ spec:
   restartPolicy: Never
 ```
 
-Apply the definition.
-
-```bash
-k apply -f t13pod.yaml
-```
-
 _Optionally:_ Verify the output.
 
 ```bash
@@ -496,7 +460,7 @@ Use a `nodeSelector` to accomplish the task.
 
 <details><summary>help</summary>
 
-Create the pod definition.
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -512,12 +476,6 @@ spec:
     name: selector
 ```
 
-Apply the pod definition.
-
-```bash
-k apply -f t14pod.yaml
-```
-
 </details>
 
 ## Task 15
@@ -527,7 +485,7 @@ Use a `nodeAffinity` to accomplish the task.
 
 <details><summary>help</summary>
 
-Create the pod definition.
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -555,13 +513,13 @@ spec:
 ## Task 16
 
 Create a pod named `tolerant`.
-The pod should run once and terminate after writing `I'm tolerant!` to the log."
+The pod should run only once and terminate after writing `I'm tolerant!` to the log."
 Ensure the pod does not run on nodes with the label `tier` set to `frontend` or `backend`.
 Schedule the pod on the control plane node.
 
 <details><summary>help</summary>
 
-Create the pod definition.
+Create the resource:
 
 ```yaml
 apiVersion: v1
@@ -588,12 +546,6 @@ spec:
     image: busybox
     command: ["/bin/sh", "-c", "echo \"I'm tolerant!\""]
   restartPolicy: Never
-```
-
-Apply the definition.
-
-```bash
-k apply -f t16pod.yaml
 ```
 
 </details>
