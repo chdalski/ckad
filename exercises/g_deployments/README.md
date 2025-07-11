@@ -537,7 +537,7 @@ Requirements:
 Create the Deployment template:
 
 ```bash
-k create deploy history-deploy --image nginx:1.25 --replicas 2 --dry-run=client -o yaml > t13deploy.yaml
+k create deploy history-deploy --image nginx:1.25 --replicas 2 --dry-run=client -o yaml > t14deploy.yaml
 ```
 
 Edit the template and update the container definition (snippet):
