@@ -28,8 +28,9 @@ run_verification() {
 
     if [[ $# -eq 0 ]]; then
         # No arguments: verify all tasks
-        for ((i=0; i<array_length; i++)); do
-            eval "FUNC=\${${array_name}[$i]}"
+        local idx
+        for ((idx=0; idx<array_length; idx++)); do
+            eval "FUNC=\${${array_name}[$idx]}"
             if declare -f "$FUNC" > /dev/null; then
                 $FUNC
             else
