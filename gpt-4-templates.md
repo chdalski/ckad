@@ -54,4 +54,5 @@ debug() {
 }
 ...
 - Debug messages should clearly state what is being checked, and in case of failure, what was expected and what was found.
+- If you need to use index variables (i. e. for "for" loops, etc.) use local variables where possible.
 ```

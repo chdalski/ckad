@@ -116,6 +116,12 @@ spec:
       name: app-config
 ```
 
+Exec the curl command:
+
+```bash
+k exec -it init-cache -- curl localhost
+```
+
 </details>
 
 ## Task 3
@@ -189,6 +195,13 @@ spec:
     persistentVolumeClaim:
       claimName: task3-pvc
   restartPolicy: Never
+```
+
+Delete the Pod and PersistentVolumeClaim:
+
+```bash
+k delete po task3-app --force
+k delete pvc task3-pvc --force
 ```
 
 </details>
@@ -431,7 +444,7 @@ spec:
 Create a file in the directory:
 
 ```bash
-k exec -it <podname> -- touch /mnt/projects/some.file
+k exec -it <podname> -- touch /projects/some.file
 ```
 
 </details>
