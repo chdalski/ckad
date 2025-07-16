@@ -2,9 +2,10 @@
 
 ## Create a set of tasks
 
-Create an exhaustive set of real kubernetes ckad exam tasks for "deployments" as markdown file using the following markdown template:
+Create an exhaustive set of challenging kubernetes ckad exam tasks for "deployments" as markdown file using the following markdown template:
 
-```markdown
+markdown-template...
+
 ## Task <tasknumber>
 
 _Objective_: <Objective of the task>
@@ -16,7 +17,7 @@ Requirements:
 __Predefined Resources:__
 
 <As yaml template (if any)>
-```
+...
 
 - Use different names per task and always specify which image to use.
 

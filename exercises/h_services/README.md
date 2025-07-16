@@ -36,6 +36,13 @@ spec:
 ```
 
 <details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose deployment web-deploy --name web-svc
+```
+
 </details>
 
 ## Task 2
@@ -76,6 +83,27 @@ spec:
 ```
 
 <details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose deployment -n dev api-deploy --port 8080 --target-port 80 --type NodePort --name api-nodeport
+```
+
+Update the nodePort definition of the service:
+
+```bash
+k edit -n dev svc api-nodeport
+```
+
+```yaml
+# ...
+spec:
+  ports:
+  - nodePort: 30080
+  # ...
+```
+
 </details>
 
 ## Task 3
@@ -116,6 +144,27 @@ spec:
 ```
 
 <details><summary>help</summary>
+
+Create the service:
+
+```bash
+k create svc clusterip db-headless --clusterip None --tcp 27017 -n database
+```
+
+Update the selector definition of the service:
+
+```bash
+k edit -n database svc db-headless
+```
+
+```yaml
+# ...
+spec:
+  selector:
+    app: db
+# ...
+```
+
 </details>
 
 ## Task 4
@@ -129,6 +178,13 @@ Requirements:
 - No selector or ports are required.
 
 <details><summary>help</summary>
+
+Create the service:
+
+```bash
+k create svc externalname external-svc --external-name example.com -n default
+```
+
 </details>
 
 ## Task 5
@@ -138,7 +194,7 @@ _Objective_: Expose a deployment with a service using custom labels and selector
 Requirements:
 
 - There is a deployment named `custom-app` in the `prod` namespace.
-- The deployment uses the image `busybox:1.36`.
+- The deployment uses the image `python:3.12-slim`.
 - The pods have the label `tier: backend`.
 - Create a service named `custom-svc` of type `ClusterIP`.
 - The service should select pods with the label `tier: backend`.
@@ -163,14 +219,21 @@ spec:
         tier: backend
     spec:
       containers:
-      - name: busybox
-        image: busybox:1.36
-        command: ["sleep", "3600"]
+      - name: app
+        image: python:3.12-slim
+        command: ["python", "-m", "http.server", "9000"]
         ports:
         - containerPort: 9000
 ```
 
 <details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose -n prod deployment custom-app --name custom-svc
+```
+
 </details>
 
 ## Task 6
@@ -211,116 +274,16 @@ spec:
 ```
 
 <details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose deployment multi-port-app --name multi-port-svc
+```
+
 </details>
 
 ## Task 7
-
-_Objective_: Create a service in a custom namespace.
-
-Requirements:
-
-- There is a deployment named `frontend` in the `staging` namespace.
-- The deployment uses the image `nginx:1.25`.
-- Create a service named `frontend-svc` of type `ClusterIP` in the `staging` namespace.
-- The service should expose port 8080 and target port 80.
-
-__Predefined Resources:__
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: frontend
-  namespace: staging
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: frontend
-  template:
-    metadata:
-      labels:
-        app: frontend
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.25
-        ports:
-        - containerPort: 80
-```
-
-<details><summary>help</summary>
-</details>
-
-## Task 8
-
-_Objective_: Update an existing service to change its selector.
-
-Requirements:
-
-- There is a service named `old-svc` in the `default` namespace.
-- The service currently selects pods with label `app: old`.
-- Change the selector to `app: new`.
-- No changes to ports or type are required.
-
-__Predefined Resources:__
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: old-svc
-spec:
-  selector:
-    app: old
-  ports:
-  - port: 80
-    targetPort: 80
-```
-
-<details><summary>help</summary>
-</details>
-
-## Task 9
-
-_Objective_: Create a service for a deployment with a custom target port.
-
-Requirements:
-
-- There is a deployment named `custom-port-app` in the `default` namespace.
-- The deployment uses the image `nginx:1.25`.
-- The container exposes port 8081.
-- Create a service named `custom-port-svc` of type `ClusterIP`.
-- The service should expose port 80 and target port 8081.
-
-__Predefined Resources:__
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: custom-port-app
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: custom-port
-  template:
-    metadata:
-      labels:
-        app: custom-port
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.25
-        ports:
-        - containerPort: 8081
-```
-
-<details><summary>help</summary>
-</details>
-
-## Task 10
 
 _Objective_: Create a service with session affinity.
 
@@ -329,7 +292,7 @@ Requirements:
 - There is a deployment named `session-app` in the `default` namespace.
 - The deployment uses the image `nginx:1.25`.
 - Create a service named `session-svc` of type `ClusterIP`.
-- The service should expose port 80 and target port 80.
+- The service should expose port 9080 and target port 80.
 - Enable session affinity based on client IP.
 
 __Predefined Resources:__
@@ -357,4 +320,135 @@ spec:
 ```
 
 <details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose deployment session-app --name session-svc --port 9080 --target-port 80 --session-affinity ClientIP
+```
+
+</details>
+
+## Task 8
+
+_Objective_: Create a LoadBalancer service with health check and annotations.
+
+Requirements:
+
+- There is a deployment named `payment-api` in the `finance` namespace
+- The deployment uses the image `python:3.12-slim`
+- The container exposes port 5000
+- Create a service named `payment-lb` of type `LoadBalancer` in the `finance` namespace
+- The service should expose port 443 and target port 5000
+- Add the annotation `service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http`
+
+__Predefined Resources:__
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-api
+  namespace: finance
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      containers:
+      - name: payment
+        image: python:3.12-slim
+        command: ["python", "-m", "http.server", "5000"]
+        ports:
+        - containerPort: 5000
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+```
+
+<details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose -n finance deployment payment-api --name payment-lb --type LoadBalancer --port 443 --target-port 5000
+```
+
+Annotate the service:
+
+```bash
+k annotate -n finance svc payment-lb service.beta.kubernetes.io/aws-load-balancer-backend-protocol=http
+```
+
+</details>
+
+## Task 9
+
+_Objective_: Create a service that only exposes a specific pod using a unique label.
+
+Requirements:
+
+- There is a deployment named `audit-logger` in the `security` namespace.
+- The deployment uses the image `alpine:3.20`.
+- One pod in the deployment has the label `role: main` (manually patched).
+- Create a service named `audit-main-svc` of type `ClusterIP` in the `security` namespace.
+- The service should only select pods with the label `role: main`.
+- The service should expose port 7000 and target port 7000.
+
+__Predefined Resources:__
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit-logger
+  namespace: security
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: audit
+  template:
+    metadata:
+      labels:
+        app: audit
+    spec:
+      containers:
+      - name: logger
+        image: alpine:3.20
+        command: ["nc", "-lk", "-p", "7000"]
+        ports:
+        - containerPort: 7000
+```
+
+<details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose -n security deployment audit-logger --name audit-main-svc
+```
+
+Update the service selector:
+
+```bash
+k edit -n security svc audit-main-svc
+```
+
+```yaml
+# ...
+spec:
+  selector:
+    role: main
+# ...
+```
+
 </details>
