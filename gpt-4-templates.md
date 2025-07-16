@@ -2,24 +2,17 @@
 
 ## Create a set of tasks
 
-Create an exhaustive set of challenging kubernetes ckad exam tasks for "deployments" as markdown file using the following markdown template:
-
-markdown-template...
-
-## Task <tasknumber>
-
-_Objective_: <Objective of the task>
-
-Requirements:
-
-<List of requirements>
-
-__Predefined Resources:__
-
-<As yaml template (if any)>
-...
+Create an exhaustive set of real/challenging Kubernetes CKAD exam tasks for "NetworkPolicies" as a markdown file.
 
 - Use different names per task and always specify which image to use.
+- Use the following template for each task.
+- For YAML templates, use ...yaml to start and ...yaml-end to end the YAML block (instead of triple backticks).
+- Each task should include:
+- A unique task number and name.
+- An Objective section describing the goal.
+- A Requirements section as a bullet list.
+- A Predefined Resources: section with YAML manifests (if any), using ...yaml and ...yaml-end.
+- A collapsible help section using <details><summary>help</summary></details>.
 
 ## Create a verification function for a task
 
