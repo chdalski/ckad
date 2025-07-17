@@ -36,6 +36,7 @@
     "matchlabels",
     "minready",
     "mkcd",
+    "netpol",
     "newkey",
     "nodeport",
     "persistentvolumeclaims",
