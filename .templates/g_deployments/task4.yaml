@@ -3,23 +3,22 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: rolling-update-demo
-  name: rolling-update-demo
-  namespace: rollout-demo
+    app: worker-deploy
+  name: worker-deploy
 spec:
-  replicas: 6
+  replicas: 4
   selector:
     matchLabels:
-      app: rolling-update-demo
+      app: worker-deploy
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: rolling-update-demo
+        app: worker-deploy
     spec:
       containers:
-      - image: nginx:1.25
+      - image: nginx:1.29
         name: nginx
         resources: {}
 status: {}

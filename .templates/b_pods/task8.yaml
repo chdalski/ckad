@@ -1,9 +1,15 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: task8
+---
+apiVersion: v1
 kind: Pod
 metadata:
   labels:
     test: liveness
   name: liveness-exec
+  namespace: task8
 spec:
   containers:
   - name: liveness

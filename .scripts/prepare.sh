@@ -12,4 +12,9 @@ prepare_kind_cluster() {
   kind create cluster --config "${CKAD_WORKSPACE_DIR}/.cluster/kind-cluster-config.yaml"
 }
 
+create_exam_resources() {
+  kubectl apply -f "${CKAD_WORKSPACE_DIR}/.templates/${CKAD_EXERCISE_DIR}/" &>/dev/null
+}
+
 prepare_kind_cluster
+create_exam_resources

@@ -310,30 +310,88 @@ verify_task7() {
 # shellcheck disable=SC2317
 verify_task8() {
   TASK_NUMBER="8"
+  local expected_namespace="sunshine"
+  local expected_limitrange_name="cpu-limit"
+  local expected_min_cpu="100m"
+  local expected_max_cpu="1"
+  local expected_default_cpu="200m"
+  local expected_default_request_cpu="100m"
 
-  # Expected values
-  local namespace="sunshine"
-  local limits_file
-  limits_file="$(git rev-parse --show-toplevel)/.templates/a_namespaces/task8/limits.yaml"
-
-  # Apply the limits.yaml file in the specified namespace and check for 'unchanged'
-  debug "Applying '$limits_file' in namespace '$namespace' and checking if resources are unchanged."
-  local apply_result
-  apply_result="$(kubectl apply -f "$limits_file" -n "$namespace" 2>/dev/null)" || {
-    debug "Failed to apply '$limits_file' in namespace '$namespace'."
+  # Check if the LimitRange exists in the correct namespace
+  debug "Checking if LimitRange \"$expected_limitrange_name\" exists in namespace \"$expected_namespace\"."
+  local lr_json
+  lr_json="$(kubectl get limitrange "$expected_limitrange_name" -n "$expected_namespace" -o json 2>/dev/null)" || {
+    debug "Failed to get LimitRange \"$expected_limitrange_name\" in namespace \"$expected_namespace\"."
     failed
     return
   }
 
-  # Check if the output contains 'unchanged'
-  debug "Checking if the apply result indicates resources are unchanged."
-  echo "$apply_result" | grep -qi unchanged || {
-    debug "Resources were not unchanged after applying '$limits_file'. Expected 'unchanged' in output. Output was: $apply_result"
+  # Extract the limits for type "Container"
+  debug "Extracting limits for type \"Container\" from LimitRange."
+  local lr_limits_json
+  lr_limits_json="$(echo "$lr_json" | jq '.spec.limits[] | select(.type == "Container")' 2>/dev/null)" || {
+    debug "Failed to extract limits for type \"Container\" from LimitRange JSON."
     failed
     return
   }
 
-  debug "Resources were unchanged after applying '$limits_file'. Verification successful."
+  # Check minimum CPU
+  debug "Checking minimum CPU setting."
+  local lr_min_cpu
+  lr_min_cpu="$(echo "$lr_limits_json" | jq -r '.min.cpu' 2>/dev/null)" || {
+    debug "Failed to extract min.cpu from LimitRange."
+    failed
+    return
+  }
+  if [ "$lr_min_cpu" != "$expected_min_cpu" ]; then
+    debug "LimitRange min.cpu mismatch: expected \"$expected_min_cpu\", found \"$lr_min_cpu\"."
+    failed
+    return
+  fi
+
+  # Check maximum CPU
+  debug "Checking maximum CPU setting."
+  local lr_max_cpu
+  lr_max_cpu="$(echo "$lr_limits_json" | jq -r '.max.cpu' 2>/dev/null)" || {
+    debug "Failed to extract max.cpu from LimitRange."
+    failed
+    return
+  }
+  if [ "$lr_max_cpu" != "$expected_max_cpu" ]; then
+    debug "LimitRange max.cpu mismatch: expected \"$expected_max_cpu\", found \"$lr_max_cpu\"."
+    failed
+    return
+  fi
+
+  # Check default CPU
+  debug "Checking default CPU setting."
+  local lr_default_cpu
+  lr_default_cpu="$(echo "$lr_limits_json" | jq -r '.default.cpu' 2>/dev/null)" || {
+    debug "Failed to extract default.cpu from LimitRange."
+    failed
+    return
+  }
+  if [ "$lr_default_cpu" != "$expected_default_cpu" ]; then
+    debug "LimitRange default.cpu mismatch: expected \"$expected_default_cpu\", found \"$lr_default_cpu\"."
+    failed
+    return
+  fi
+
+  # Check defaultRequest CPU
+  debug "Checking defaultRequest CPU setting."
+  local lr_default_request_cpu
+  lr_default_request_cpu="$(echo "$lr_limits_json" | jq -r '.defaultRequest.cpu' 2>/dev/null)" || {
+    debug "Failed to extract defaultRequest.cpu from LimitRange."
+    failed
+    return
+  }
+  if [ "$lr_default_request_cpu" != "$expected_default_request_cpu" ]; then
+    debug "LimitRange defaultRequest.cpu mismatch: expected \"$expected_default_request_cpu\", found \"$lr_default_request_cpu\"."
+    failed
+    return
+  fi
+
+  debug "All checks passed for Task $TASK_NUMBER. LimitRange is correctly configured."
   solved
   return
 }

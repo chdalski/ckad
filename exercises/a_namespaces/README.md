@@ -95,13 +95,14 @@ _Optionally:_ describe the namespace to see the limits in place.
 
 <details><summary>help</summary>
 
-Create a yaml file:
+Create the resource:
 
 ```yaml
 apiVersion: v1
 kind: LimitRange
 metadata:
   name: cpu-limit
+  namespace: sunshine
 spec:
   limits:
   - type: Container
@@ -113,12 +114,6 @@ spec:
       cpu: 200m # define the default cpu limit
     defaultRequest:
       cpu: 100m # define the default cpu request
-```
-
-Apply the file (don't forget the namespace):
-
-```shell
-k apply -f <filename> -n sunshine
 ```
 
 </details>
