@@ -39,114 +39,149 @@ spec:
 ```
 
 <details><summary>help</summary>
+
+Expose the deployment:
+
+```bash
+k expose -n internal deployment internal-api --name internal-api-svc --port 8080 --target-port 80
+```
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-admin
+  namespace: internal
+spec:
+  podSelector:
+    matchLabels:
+      app: internal-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: admin
+    ports:
+    - protocol: TCP
+      port: 80
+```
+
+__Note:__
+If namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects the pods matching podSelector in the Namespaces selected by NamespaceSelector.
+[_Otherwise it selects the pods matching podSelector in the policy's own namespace._](https://kubernetes.io/docs/reference/kubernetes-api/policy-resources/network-policy-v1/#NetworkPolicySpec)
+
+So you could also use (snippet):
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+# ...
+spec:
+  # ...
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: admin
+      namespaceSelector: # AND concatenated, so no extra '-' (list entry) at the beginning
+        matchLabels:
+          kubernetes.io/metadata.name: internal
+    ports:
+      # ...
+```
+
 </details>
 
 ## Task 2
-
-_Objective_: Create an Ingress resource to expose a service externally.
-
-Requirements:
-
-- There is a deployment named `api-backend` in the `net-ingress` namespace.
-- The deployment uses the image `hashicorp/http-echo:1.0` with args: `["-text=hello"]`.
-- Expose the deployment with a service named `api-svc` on port 5678.
-- Create an Ingress named `api-ingress` to expose `/api` path to `api-svc`.
-
-__Predefined Resources:__
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: api-backend
-  namespace: net-ingress
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: api
-  template:
-    metadata:
-      labels:
-        app: api
-    spec:
-      containers:
-      - name: echo
-        image: hashicorp/http-echo:1.0
-        args:
-        - "-text=hello"
-        ports:
-        - containerPort: 5678
-```
-
-<details><summary>help</summary>
-</details>
-
-## Task 3
 
 _Objective_: Restrict pod communication using NetworkPolicy.
 
 Requirements:
 
-- Create a namespace net-policy.
-- Deploy two pods: `frontend` (image: `nginx:1.25`) and `backend` (image: `hashicorp/http-echo:1.0`, args: `["-text=backend"]`).
+- Create a namespace `net-policy`.
+- Deploy two pods: `frontend` (image: `nginx:1.25`) and `backend` (image: `hashicorp/http-echo:1.0`, args: `["-text=backend"]`, port 5678).
 - Create a service `backend-svc` for the backend pod on port 8080.
 - Create a NetworkPolicy named `deny-all` that denies all ingress to backend except from frontend.
 
 <details><summary>help</summary>
-</details>
 
-## Task 4
+Create the namespace:
 
-_Objective_: Test DNS resolution between pods.
+```bash
+k create ns net-policy
+```
 
-Requirements:
+Create the frontend pod:
 
-- There is a pod named `api-server` in the `dns-test` namespace.
-- Deploy a service named `dns-svc` (ClusterIP) for the `api-server` pod.
-- Create a pod `api-test` (image: `busybox:1.36`, command: `sleep 28800`).
-- From `api-test`, verify DNS resolution to `dns-svc`.
+```bash
+k run frontend --image nginx:1.25 -n net-policy
+```
 
-__Predefined Resources:__
+Create the backend pod template:
+
+```bash
+k run backend --image hashicorp/http-echo:1.0 -n net-policy --port 5678 --dry-run=client -o yaml > t2pod_backend.yaml
+```
+
+Edit the backend pod template and add the args (snippet):
 
 ```yaml
 apiVersion: v1
 kind: Pod
-metadata:
-  name: api-server
-  namespace: dns-test
-  labels:
-    app: api-server
+# ...
 spec:
   containers:
-  - name: nginx
-    image: nginx:1.25
+  - image: hashicorp/http-echo:1.0
+    name: backend
+    args: ["-text=backend"]
     ports:
-    - containerPort: 80
+    - containerPort: 5678
+    resources: {}
+  # ...
 ```
 
-<details><summary>help</summary>
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: net-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 5678
+```
+
 </details>
 
-## Task 5
+## Task 3
 
 _Objective_: Restrict pod access to a backend service to only pods with a specific label.
 
 Requirements:
 
-- Create a namespace called `netpol-demo1`
-- Deploy a pod named `backend` using the image `nginx:1.25`
-- Deploy a pod named `frontend` using the image `busybox:1.36` with the label `role=frontend`
+- There are two pods named `frontend` and `backend` in the `netpol-demo1` namespace.
 - Create a NetworkPolicy named `allow-frontend` that only allows pods with label `role=frontend` to connect to the `backend` pod on port 80.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo1
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -158,6 +193,8 @@ spec:
   containers:
   - name: nginx
     image: nginx:1.25
+    ports:
+    - containerPort: 80
 ---
 apiVersion: v1
 kind: Pod
@@ -170,30 +207,49 @@ spec:
   containers:
   - name: busybox
     image: busybox:1.36
-    command: ["sleep", "3600"]
+    command: ["sleep", "28800"]
 ```
 
 <details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend
+  namespace: netpol-demo1
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: frontend
+    ports:
+    - protocol: TCP
+      port: 80
+```
+
 </details>
 
-## Task 6
+## Task 4
 
 _Objective_: Deny all ingress and egress traffic to a pod except DNS.
 
 Requirements:
 
-- Create a namespace called `netpol-demo2`.
-- Deploy a pod named `isolated` using the image `alpine:3.20`.
+- There is a pod named `isolated` in the `netpol-demo2` namespace.
 - Create a NetworkPolicy named `deny-all-except-dns` that denies all ingress and egress except egress to DNS (UDP port 53).
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo2
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -203,35 +259,46 @@ spec:
   containers:
   - name: alpine
     image: alpine:3.20
-    command: ["sleep", "3600"]
+    command: ["sleep", "28800"]
 ```
 
 <details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-except-dns
+  namespace: netpol-demo2
+spec:
+  podSelector: {} # select all pods
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+```
+
 </details>
 
-## Task 7
+## Task 5
 
 _Objective_: Allow traffic to a pod only from a specific namespace.
 
 Requirements:
 
-- Create two namespaces: `netpol-demo3` and `trusted-ns`.
-- Deploy a pod named `api-server` in `netpol-demo3` using the image `httpd:2.4`.
+- There is a pod named `api-server` in the `netpol-demo3` namespace.
 - Create a NetworkPolicy named `allow-from-trusted-ns` that only allows ingress traffic to `api-server` from pods in the `trusted-ns` namespace.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo3
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: trusted-ns
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -245,25 +312,42 @@ spec:
     image: httpd:2.4
 ```
 
-## Task 8
+<details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-trusted-ns
+  namespace: netpol-demo3
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: trusted-ns
+```
+
+</details>
+
+## Task 6
 
 _Objective_: Allow only HTTP (port 80) traffic to a pod from pods with a specific label in the same namespace.
 
 Requirements:
 
-- Create a namespace called `netpol-demo4`.
-- Deploy a pod named `web` using the image `nginx:1.25`.
-- Deploy another pod named `client` with label `access=web` using the image `busybox:1.36`.
+- There are two pods named `web` and `client` in the `netpol-demo4` namespace.
 - Create a NetworkPolicy named `http-only-from-client` that allows only pods with label `access=web` to access `web` on port 80.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo4
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -275,6 +359,8 @@ spec:
   containers:
   - name: nginx
     image: nginx:1.25
+    ports:
+    - containerPort: 80
 ---
 apiVersion: v1
 kind: Pod
@@ -288,27 +374,48 @@ spec:
   - name: busybox
     image: busybox:1.36
     command: ["sleep", "3600"]
-
 ```
 
-## Task 9
+<details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: http-only-from-client
+  namespace: netpol-demo4
+spec:
+  podSelector: # What can be accessed
+    matchLabels:
+      app: web
+  policyTypes:
+  - Ingress
+  ingress:
+  - from: # From where can it be accessed
+    - podSelector:
+        matchLabels:
+          access: web
+    ports:
+    - protocol: TCP
+      port: 80
+```
+
+</details>
+
+## Task 7
 
 _Objective_: Allow egress traffic from a pod only to an external IP on a specific port.
 
 Requirements:
 
-- Create a namespace called `netpol-demo5`.
-- Deploy a pod named `egress-pod` using the image `alpine:3.20`.
+- There is a pod named `egress-pod` in namespace `netpol-demo5`.
 - Create a NetworkPolicy named `allow-egress-external` that allows egress from `egress-pod` only to IP `8.8.8.8` on TCP port 53.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo5
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -319,27 +426,45 @@ spec:
   - name: alpine
     image: alpine:3.20
     command: ["sleep", "3600"]
-
 ```
 
-## Task 10
+<details><summary>help</summary>
+
+Create the resource:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-external
+  namespace: netpol-demo5
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 8.8.8.8/32
+    ports:
+    - protocol: TCP
+      port: 53
+```
+
+</details>
+
+## Task 8
 
 _Objective_: Allow all pods in a namespace to communicate with each other, but deny all ingress from other namespaces.
 
 Requirements:
 
-- Create a namespace called `netpol-demo6`.
-- Deploy two pods named `pod-a` and `pod-b` using the image `nginx:1.25`.
+- There are two pods named `pod-a` and `pod-b` in namespace `netpol-demo6`.
 - Create a NetworkPolicy named `internal-only` that allows all pods in `netpol-demo6` to communicate with each other, but denies all ingress from other namespaces.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo6
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -363,27 +488,41 @@ spec:
   containers:
   - name: nginx
     image: nginx:1.25
-
 ```
 
-## Task 11
+<details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: internal-only
+  namespace: netpol-demo6
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector: {}
+```
+
+</details>
+
+## Task 9
 
 _Objective_: Allow ingress to a pod from a specific IP block only.
 
 Requirements:
 
-- Create a namespace called `netpol-demo7`.
-- Deploy a pod named `restricted-pod` using the image `nginx:1.25`.
+- There is a pod named `restricted-pod` in namespace `netpol-demo7`.
 - Create a NetworkPolicy named `allow-specific-ipblock` that allows ingress to `restricted-pod` only from IP block `10.10.0.0/16`.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo7
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -395,28 +534,46 @@ spec:
   containers:
   - name: nginx
     image: nginx:1.25
-
 ```
 
-## Task 12
+<details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-specific-ipblock
+  namespace: netpol-demo7
+spec:
+  podSelector:
+    matchLabels:
+      app: restricted
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 10.10.0.0/16
+```
+
+</details>
+
+## Task 10
 
 _Objective_: Allow ingress to a pod on multiple ports from different sources.
 
 Requirements:
 
-- Create a namespace called `netpol-demo8`.
-- Deploy a pod named `multi-port-pod` using the image `nginx:1.25`.
+- There is a pod named `multi-port-pod` in namespace `netpol-demo8`.
+- Create a NetworkPolicy named `allow-frontend-and-admin` that allows
 - Allow ingress on port 80 from pods with label `role=frontend`.
 - Allow ingress on port 443 from pods with label `role=admin`.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo8
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -428,6 +585,13 @@ spec:
   containers:
   - name: nginx
     image: nginx:1.25
+    ports:
+    - name: http
+      containerPort: 80
+      protocol: TCP
+    - name: https
+      containerPort: 443
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Pod
@@ -454,33 +618,60 @@ spec:
   - name: busybox
     image: busybox:1.36
     command: ["sleep", "3600"]
-
 ```
 
-## Task 13
+<details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-and-admin
+  namespace: netpol-demo8
+spec:
+  podSelector:
+    matchLabels:
+      app: multi-port
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: frontend
+    ports:
+    - protocol: TCP
+      port: 80
+  - from:
+    - podSelector:
+        matchLabels:
+          role: admin
+    ports:
+    - protocol: TCP
+      port: 443
+```
+
+__Note:__
+There are multiple pods in the namespace. Therefore we can't use an empty podSelector in this case.
+
+</details>
+
+## Task 11
 
 _Objective_: Allow egress from a pod to another pod in a different namespace.
 
 Requirements:
 
-- Create two namespaces: `netpol-demo9` and `external-ns`.
-- Deploy a pod named `source-pod` in `netpol-demo9` using the image `alpine:3.20`.
-- Deploy a pod named `target-pod` in `external-ns` using the image `nginx:1.25`.
-- Create a NetworkPolicy in `netpol-demo9` that allows egress from `source-pod` to `target-pod` on port 80.
+- There are two namespaces named `netpol-demo9` and `external-ns`.
+- In namespace `netpol-demo9` is a pod named `source-pod`.
+- In namespace `external-ns` is a pod named `target-pod`.
+- Create a NetworkPolicy named `external-target` in `netpol-demo9` that allows egress from `source-pod` to `target-pod` on port 80.
 
 __Predefined Resources:__
 
 ```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netpol-demo9
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: external-ns
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -507,14 +698,44 @@ spec:
     image: nginx:1.25
 ```
 
-## Task 14
+<details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: external-target
+  namespace: netpol-demo9
+spec:
+  podSelector:
+    matchLabels:
+      app: source
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: target
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: external-ns
+    ports:
+    - protocol: TCP
+      port: 80
+```
+
+</details>
+
+## Task 12
 
 _Objective_: Deny all ingress and egress traffic to a pod.
 
 Requirements:
 
-- Create a namespace called `netpol-demo10`.
-- Deploy a pod named `locked-down` using the image `alpine:3.20`.
+- There is a pods named `locked-down` in the `netpol-demo10` namespace.
 - Create a NetworkPolicy named `deny-all` that denies all ingress and egress to `locked-down`.
 
 __Predefined Resources:__
@@ -536,3 +757,39 @@ spec:
     image: alpine:3.20
     command: ["sleep", "3600"]
 ```
+
+<details><summary>help</summary>
+
+Create the networkPolicy:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: netpol-demo10
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+```
+
+or:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: netpol-demo10
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress: []
+```
+
+</details>
