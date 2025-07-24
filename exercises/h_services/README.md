@@ -11,7 +11,7 @@ Requirements:
 - Create a service named `web-svc` of type `ClusterIP`.
 - The service should expose port 80 and target port 80 on the pods.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -57,7 +57,7 @@ Requirements:
 - The service should expose port 8080 and target port 80 on the pods.
 - The NodePort should be set to 30080.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -117,7 +117,7 @@ Requirements:
 - Create a headless service named `db-headless`.
 - The service should expose port 27017 and have no cluster IP.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -200,7 +200,7 @@ Requirements:
 - The service should select pods with the label `tier: backend`.
 - The service should expose port 9000 and target port 9000.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -248,7 +248,7 @@ Requirements:
 - Create a service named `multi-port-svc` of type `ClusterIP`.
 - The service should expose ports 80 and 443, targeting the same ports on the pods.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -295,7 +295,7 @@ Requirements:
 - The service should expose port 9080 and target port 80.
 - Enable session affinity based on client IP.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -342,7 +342,7 @@ Requirements:
 - The service should expose port 443 and target port 5000
 - Add the annotation `service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http`
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -403,7 +403,7 @@ Requirements:
 - The service should only select pods with the label `role: main`.
 - The service should expose port 7000 and target port 7000.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -464,7 +464,7 @@ Requirements:
 - Create a pod `api-test` (image: `busybox:1.36`, command: `sleep 28800`).
 - From `api-test`, verify DNS resolution to `dns-svc`.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1

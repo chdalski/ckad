@@ -13,7 +13,7 @@ Requirements:
 - The service should expose port 8080 and target port 80.
 - Create a NetworkPolicy named `allow-from-admin` that only allows ingress to the service from pods with the label `role: admin` in the same namespace.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: apps/v1
@@ -70,7 +70,7 @@ spec:
       port: 80
 ```
 
-__Note:__
+**Note:**
 If namespaceSelector is also set, then the NetworkPolicyPeer as a whole selects the pods matching podSelector in the Namespaces selected by NamespaceSelector.
 [_Otherwise it selects the pods matching podSelector in the policy's own namespace._](https://kubernetes.io/docs/reference/kubernetes-api/policy-resources/network-policy-v1/#NetworkPolicySpec)
 
@@ -179,7 +179,7 @@ Requirements:
 - There are two pods named `frontend` and `backend` in the `netpol-demo1` namespace.
 - Create a NetworkPolicy named `allow-frontend` that only allows pods with label `role=frontend` to connect to the `backend` pod on port 80.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -247,7 +247,7 @@ Requirements:
 - There is a pod named `isolated` in the `netpol-demo2` namespace.
 - Create a NetworkPolicy named `deny-all-except-dns` that denies all ingress and egress except egress to DNS (UDP port 53).
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -296,7 +296,7 @@ Requirements:
 - There is a pod named `api-server` in the `netpol-demo3` namespace.
 - Create a NetworkPolicy named `allow-from-trusted-ns` that only allows ingress traffic to `api-server` from pods in the `trusted-ns` namespace.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -345,7 +345,7 @@ Requirements:
 - There are two pods named `web` and `client` in the `netpol-demo4` namespace.
 - Create a NetworkPolicy named `http-only-from-client` that allows only pods with label `access=web` to access `web` on port 80.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -413,7 +413,7 @@ Requirements:
 - There is a pod named `egress-pod` in namespace `netpol-demo5`.
 - Create a NetworkPolicy named `allow-egress-external` that allows egress from `egress-pod` only to IP `8.8.8.8` on TCP port 53.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -462,7 +462,7 @@ Requirements:
 - There are two pods named `pod-a` and `pod-b` in namespace `netpol-demo6`.
 - Create a NetworkPolicy named `internal-only` that allows all pods in `netpol-demo6` to communicate with each other, but denies all ingress from other namespaces.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -520,7 +520,7 @@ Requirements:
 - There is a pod named `restricted-pod` in namespace `netpol-demo7`.
 - Create a NetworkPolicy named `allow-specific-ipblock` that allows ingress to `restricted-pod` only from IP block `10.10.0.0/16`.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -571,7 +571,7 @@ Requirements:
 - Allow ingress on port 80 from pods with label `role=frontend`.
 - Allow ingress on port 443 from pods with label `role=admin`.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -653,7 +653,7 @@ spec:
       port: 443
 ```
 
-__Note:__
+**Note:**
 There are multiple pods in the namespace. Therefore we can't use an empty podSelector in this case.
 
 </details>
@@ -669,7 +669,7 @@ Requirements:
 - In namespace `external-ns` is a pod named `target-pod`.
 - Create a NetworkPolicy named `external-target` in `netpol-demo9` that allows egress from `source-pod` to `target-pod` on port 80.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
@@ -738,7 +738,7 @@ Requirements:
 - There is a pods named `locked-down` in the `netpol-demo10` namespace.
 - Create a NetworkPolicy named `deny-all` that denies all ingress and egress to `locked-down`.
 
-__Predefined Resources:__
+**Predefined Resources:**
 
 ```yaml
 apiVersion: v1
