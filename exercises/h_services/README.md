@@ -452,3 +452,76 @@ spec:
 ```
 
 </details>
+
+## Task 10
+
+_Objective_: Test DNS resolution between pods.
+
+Requirements:
+
+- There is a pod named `api-server` in the `dns-test` namespace.
+- Deploy a service named `dns-svc` (ClusterIP) for the `api-server` pod.
+- Create a pod `api-test` (image: `busybox:1.36`, command: `sleep 28800`).
+- From `api-test`, verify DNS resolution to `dns-svc`.
+
+__Predefined Resources:__
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-server
+  namespace: dns-test
+  labels:
+    app: api-server
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.25
+    ports:
+    - containerPort: 80
+```
+
+<details><summary>help</summary>
+
+Expose the pod:
+
+```bash
+k expose -n dns-test po api-server --port 80 --name dns-svc
+```
+
+Create the pod template:
+
+```bash
+k run -n dns-test api-test --image busybox:1.36 --dry-run=client -o yaml > t10pod.yaml
+```
+
+Add the command to the pod template (snippet):
+
+```yaml
+apiVersion: v1
+kind: Pod
+# ...
+spec:
+  containers:
+  - image: busybox:1.36
+    name: api-test
+    command: ["sleep", "28800"]
+  # ...
+```
+
+Apply the template:
+
+```bash
+k apply -f t10pod.yaml
+```
+
+Execute the test:
+
+```bash
+k exec -n dns-test pods/api-test -it -- wget -O- dns-svc
+# or
+k exec -n dns-test pods/api-test -it -- wget -O- dns-svc.dns-test.svc.cluster.local
+```
+
+</details>

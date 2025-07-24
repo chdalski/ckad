@@ -983,6 +983,150 @@ verify_task9() {
   return
 }
 
+# shellcheck disable=SC2317
+verify_task10() {
+  TASK_NUMBER="10"
+  local expected_namespace="dns-test"
+  local expected_api_server_pod="api-server"
+  local expected_api_server_label_key="app"
+  local expected_api_server_label_value="api-server"
+  local expected_service_name="dns-svc"
+  local expected_service_type="ClusterIP"
+  local expected_service_port=80
+  local expected_test_pod="api-test"
+  local expected_test_image="busybox:1.36"
+  local expected_test_command="sleep 28800"
+
+  # Check if the namespace exists
+  debug "Checking if namespace \"$expected_namespace\" exists."
+  kubectl get namespace "$expected_namespace" >/dev/null 2>&1 || {
+    debug "Namespace \"$expected_namespace\" does not exist."
+    failed
+    return
+  }
+
+  # Check if the api-server pod exists and has the correct label
+  debug "Checking if pod \"$expected_api_server_pod\" exists and has label \"$expected_api_server_label_key: $expected_api_server_label_value\"."
+  local api_server_pod_json
+  api_server_pod_json="$(kubectl get pod "$expected_api_server_pod" -n "$expected_namespace" -o json 2>/dev/null)" || {
+    debug "Failed to get pod \"$expected_api_server_pod\" in namespace \"$expected_namespace\"."
+    failed
+    return
+  }
+  local api_server_label_value
+  api_server_label_value="$(echo "$api_server_pod_json" | jq -r ".metadata.labels[\"$expected_api_server_label_key\"]" 2>/dev/null)" || {
+    debug "Failed to extract api-server pod label \"$expected_api_server_label_key\"."
+    failed
+    return
+  }
+  if [ "$api_server_label_value" != "$expected_api_server_label_value" ]; then
+    debug "api-server pod label mismatch: expected \"$expected_api_server_label_key: $expected_api_server_label_value\", found \"$expected_api_server_label_key: $api_server_label_value\"."
+    failed
+    return
+  fi
+
+  # Check if the service exists and is of correct type and port
+  debug "Checking if service \"$expected_service_name\" exists and is of type \"$expected_service_type\"."
+  local svc_json
+  svc_json="$(kubectl get service "$expected_service_name" -n "$expected_namespace" -o json 2>/dev/null)" || {
+    debug "Failed to get service \"$expected_service_name\" in namespace \"$expected_namespace\"."
+    failed
+    return
+  }
+  local svc_type
+  svc_type="$(echo "$svc_json" | jq -r '.spec.type' 2>/dev/null)" || {
+    debug "Failed to extract service type from service JSON."
+    failed
+    return
+  }
+  if [ "$svc_type" != "$expected_service_type" ]; then
+    debug "Service type mismatch: expected \"$expected_service_type\", found \"$svc_type\"."
+    failed
+    return
+  fi
+  local svc_port
+  svc_port="$(echo "$svc_json" | jq -r '.spec.ports[0].port' 2>/dev/null)" || {
+    debug "Failed to extract service port from service JSON."
+    failed
+    return
+  }
+  if [ "$svc_port" != "$expected_service_port" ]; then
+    debug "Service port mismatch: expected $expected_service_port, found $svc_port."
+    failed
+    return
+  fi
+
+  # Check if the service selector matches the api-server pod label
+  debug "Checking if service selector matches api-server pod label."
+  local svc_selector_json
+  svc_selector_json="$(echo "$svc_json" | jq -c '.spec.selector' 2>/dev/null)" || {
+    debug "Failed to extract service selector from service JSON."
+    failed
+    return
+  }
+  local selector_value
+  selector_value="$(echo "$svc_selector_json" | jq -r ".${expected_api_server_label_key}" 2>/dev/null)" || {
+    debug "Failed to extract selector value for key \"$expected_api_server_label_key\" from service selector."
+    failed
+    return
+  }
+  if [ "$selector_value" != "$expected_api_server_label_value" ]; then
+    debug "Service selector mismatch: expected \"$expected_api_server_label_key: $expected_api_server_label_value\", found \"$expected_api_server_label_key: $selector_value\"."
+    failed
+    return
+  fi
+
+  # Check if the test pod exists and has the correct image and command
+  debug "Checking if test pod \"$expected_test_pod\" exists and has correct image and command."
+  local test_pod_json
+  test_pod_json="$(kubectl get pod "$expected_test_pod" -n "$expected_namespace" -o json 2>/dev/null)" || {
+    debug "Failed to get test pod \"$expected_test_pod\" in namespace \"$expected_namespace\"."
+    failed
+    return
+  }
+  local test_image
+  test_image="$(echo "$test_pod_json" | jq -r '.spec.containers[0].image' 2>/dev/null)" || {
+    debug "Failed to extract image from test pod JSON."
+    failed
+    return
+  }
+  if [ "$test_image" != "$expected_test_image" ]; then
+    debug "Test pod image mismatch: expected \"$expected_test_image\", found \"$test_image\"."
+    failed
+    return
+  fi
+  local test_command
+  test_command="$(echo "$test_pod_json" | jq -r '.spec.containers[0].command | join(" ")' 2>/dev/null)" || {
+    debug "Failed to extract command from test pod JSON."
+    failed
+    return
+  }
+  if [ "$test_command" != "$expected_test_command" ]; then
+    debug "Test pod command mismatch: expected \"$expected_test_command\", found \"$test_command\"."
+    failed
+    return
+  fi
+
+  # Test DNS resolution and connectivity from api-test pod to dns-svc using wget
+  debug "Testing DNS resolution and HTTP connectivity from pod \"$expected_test_pod\" to service \"$expected_service_name\" using wget."
+  local wget_result
+  wget_result="$(kubectl exec -n "$expected_namespace" "$expected_test_pod" -- wget -O - -T 5 "http://$expected_service_name" 2>/dev/null)" || {
+    debug "Failed to wget http://$expected_service_name from test pod."
+    failed
+    return
+  }
+  # Check if wget output contains typical nginx welcome page content
+  echo "$wget_result" | grep -q "Welcome to nginx!" 2>/dev/null || {
+    debug "wget to http://$expected_service_name succeeded but did not return expected nginx content."
+    failed
+    return
+  }
+
+  debug "All checks passed for Task $TASK_NUMBER. DNS resolution and HTTP connectivity from test pod to service succeeded."
+  solved
+  return
+}
+
 # shellcheck disable=SC2034
 VERIFY_TASK_FUNCTIONS=(
   verify_task1
@@ -994,6 +1138,7 @@ VERIFY_TASK_FUNCTIONS=(
   verify_task7
   verify_task8
   verify_task9
+  verify_task10
 )
 run_verification VERIFY_TASK_FUNCTIONS "$@"
 
