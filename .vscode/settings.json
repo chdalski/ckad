@@ -29,6 +29,8 @@
     "externalname",
     "healthz",
     "hostpath",
+    "ingressclass",
+    "ingressclasses",
     "ipblock",
     "keygen",
     "keyout",
@@ -53,6 +55,7 @@
     "tolerations",
     "toplevel",
     "tostring",
+    "traefik",
     "vimrc"
   ]
 }
