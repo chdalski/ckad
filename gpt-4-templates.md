@@ -2,7 +2,7 @@
 
 ## Create a set of tasks
 
-Create an exhaustive set of challenging, real-world Kubernetes CKAD exam tasks for the topic "NetworkPolicies" as a raw markdown file.
+Create an exhaustive set of challenging, real-world Kubernetes CKAD exam tasks for the topic "NetworkPolicies" as a raw-markdown file.
 
 - Use different names per task and always specify which image to use.
 - Use the following template for each task.
@@ -26,6 +26,7 @@ This following definition outlines the mandatory rules and best practices for cr
 - At the beginning of the function create a non-local variable TASK_NUMBER="<tasknumber>".
 - Next, create local variables with predefined values after the TASK_NUMBER.
 - For each variable that is not predefined, use local on the line just before its first assignment, instead of declaring all local variables at the beginning of the function.
+- Only assign a variable if its value is used in a check, comparison, or further processing. Do not assign variables for values that are not used, and do not assign variables solely for documentation or debug output. If a command is only used to check for success or failure, do not assign its output to a variable unless you need to process that output. If you run a command whose output is not assigned to a variable, always redirect its output (stdout and stderr) to /dev/null to prevent any unintended printing.
 - Add a brief comment before each major verification step explaining what is being checked.
 - Every jq and kubectl command must be followed by error handling and a debug message if it fails.
 - Use a consistent naming scheme for variables extracted from JSON (e.g., prefix with rs_ for ReplicaSet-related variables).

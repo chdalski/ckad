@@ -16,10 +16,13 @@
     "DRYJ",
     "DRYY",
     "argjson",
+    "cicd",
     "ckadenv",
     "clusterip",
     "configmap",
     "cpus",
+    "crbinding",
+    "crole",
     "devcontainers",
     "dind",
     "disktype",
@@ -44,6 +47,7 @@
     "nodeport",
     "persistentvolumeclaims",
     "podname",
+    "podslog",
     "replicaset",
     "replicasets",
     "resourcequota",
@@ -57,5 +61,15 @@
     "tostring",
     "traefik",
     "vimrc"
+  ],
+  "cSpell.words": [
+    "apigroup",
+    "clusterrole",
+    "clusterrolebinding",
+    "rolebinding",
+    "serviceaccount",
+    "storageclasses",
+    "subresource",
+    "Subresources"
   ]
 }
