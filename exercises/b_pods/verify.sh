@@ -3,7 +3,7 @@
 # shellcheck source=../../.scripts/verify.sh
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task1() {
   TASK_NUMBER="1"
   local namespace="task1"
@@ -53,7 +53,7 @@ verify_task1() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task2() {
   TASK_NUMBER="2"
   local namespace="task2"
@@ -171,7 +171,7 @@ verify_task2() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task3() {
   TASK_NUMBER="3"
   local file="busybox-env.txt"
@@ -231,7 +231,7 @@ verify_task3() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task4() {
   TASK_NUMBER="4"
   local namespace="default"
@@ -297,7 +297,7 @@ verify_task4() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task5() {
   TASK_NUMBER="5"
   local pod_name="task5-app"
@@ -391,7 +391,7 @@ verify_task5() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task6() {
   TASK_NUMBER="6"
   local namespace="task6"
@@ -489,7 +489,7 @@ verify_task6() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task7() {
   TASK_NUMBER="7"
   local namespace="default"
@@ -584,7 +584,7 @@ verify_task7() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task8() {
   TASK_NUMBER="8"
   local namespace="task8"
@@ -679,7 +679,7 @@ verify_task8() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task9() {
   TASK_NUMBER="9"
   local pod_name="nginx-health"
@@ -781,7 +781,7 @@ verify_task9() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task10() {
   TASK_NUMBER="10"
   local namespace="task10"
@@ -831,7 +831,7 @@ verify_task10() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task11() {
   TASK_NUMBER="11"
   local namespace="limits"
@@ -935,7 +935,7 @@ verify_task11() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task12() {
   TASK_NUMBER="12"
   local namespace="limits"
@@ -1057,7 +1057,7 @@ verify_task12() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task13() {
   TASK_NUMBER="13"
   local namespace="default"
@@ -1127,7 +1127,7 @@ verify_task13() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task14() {
   TASK_NUMBER="14"
   local namespace="task14"
@@ -1211,7 +1211,7 @@ verify_task14() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task15() {
   TASK_NUMBER="15"
   local namespace="task15"
@@ -1324,7 +1324,7 @@ verify_task15() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task16() {
   TASK_NUMBER="16"
   local pod_name="tolerant"

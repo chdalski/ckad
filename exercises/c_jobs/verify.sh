@@ -3,7 +3,7 @@
 # shellcheck source=../../.scripts/verify.sh
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task1() {
   TASK_NUMBER="1"
   local namespace="default"
@@ -67,7 +67,7 @@ verify_task1() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task2() {
   TASK_NUMBER="2"
   local job_name="parallel-job"
@@ -182,7 +182,7 @@ verify_task2() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task3() {
   TASK_NUMBER="3"
   local namespace="cleanup"
@@ -256,7 +256,7 @@ verify_task3() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task4() {
   TASK_NUMBER="4"
   local job_name="failure-job"
@@ -355,7 +355,7 @@ verify_task4() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task5() {
   TASK_NUMBER="5"
   local namespace="scheduled"
@@ -426,14 +426,14 @@ verify_task5() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task6() {
   TASK_NUMBER="6"
 
   # Expected values
   local job_name="indexed-completion-job"
   local namespace="default"
-  local expected_command='This is task $JOB_COMPLETION_INDEX'
+  local expected_command="This is task $JOB_COMPLETION_INDEX"
   local expected_completions=3
   local expected_completion_mode="Indexed"
   local expected_image="busybox:1.28"
@@ -513,7 +513,7 @@ verify_task6() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task7() {
   TASK_NUMBER="7"
   local job_name="retry-policy-job"
@@ -639,7 +639,7 @@ verify_task7() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task8() {
   TASK_NUMBER="8"
   local job_name="resource-limited-job"
@@ -759,7 +759,7 @@ verify_task8() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task9() {
   TASK_NUMBER="9"
   local job_name="label-job"
@@ -842,7 +842,7 @@ verify_task9() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task10() {
   TASK_NUMBER="10"
   local namespace="affinity"
@@ -974,7 +974,7 @@ verify_task10() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task11() {
   TASK_NUMBER="11"
   local job_name="long-job"
@@ -1088,7 +1088,7 @@ verify_task11() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task12() {
   TASK_NUMBER="12"
   local namespace="default"
@@ -1183,7 +1183,7 @@ verify_task12() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task13() {
   TASK_NUMBER="13"
   local namespace="sidecar"

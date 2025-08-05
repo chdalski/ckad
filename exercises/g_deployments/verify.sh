@@ -3,7 +3,7 @@
 # shellcheck source=../../.scripts/verify.sh
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task1() {
   TASK_NUMBER="1"
 
@@ -58,7 +58,7 @@ verify_task1() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task2() {
   TASK_NUMBER="2"
 
@@ -122,7 +122,7 @@ verify_task2() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task3() {
   TASK_NUMBER="3"
 
@@ -158,7 +158,7 @@ verify_task3() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task4() {
   TASK_NUMBER="4"
 
@@ -209,7 +209,7 @@ verify_task4() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task5() {
   TASK_NUMBER="5"
 
@@ -295,7 +295,7 @@ verify_task5() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task6() {
   TASK_NUMBER="6"
 
@@ -387,7 +387,7 @@ verify_task6() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task7() {
   TASK_NUMBER="7"
 
@@ -449,7 +449,7 @@ verify_task7() {
 }
 
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task8() {
   TASK_NUMBER="8"
 
@@ -529,7 +529,7 @@ verify_task8() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task9() {
   TASK_NUMBER="9"
 
@@ -594,7 +594,7 @@ verify_task9() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task10() {
   TASK_NUMBER="10"
 
@@ -668,7 +668,7 @@ verify_task10() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task11() {
   TASK_NUMBER="11"
 
@@ -728,7 +728,7 @@ verify_task11() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task12() {
   TASK_NUMBER="12"
 
@@ -775,7 +775,7 @@ verify_task12() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task13() {
   TASK_NUMBER="13"
 
@@ -831,7 +831,7 @@ verify_task13() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task14() {
   TASK_NUMBER="14"
 
@@ -881,7 +881,7 @@ verify_task14() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task15() {
   TASK_NUMBER="15"
 
@@ -929,7 +929,7 @@ verify_task15() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task16() {
   TASK_NUMBER="16"
 
@@ -977,7 +977,7 @@ verify_task16() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task17() {
   TASK_NUMBER="17"
 
@@ -1073,7 +1073,7 @@ verify_task17() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task18() {
   TASK_NUMBER="18"
 
@@ -1117,7 +1117,7 @@ verify_task18() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task19() {
   TASK_NUMBER="19"
 
@@ -1161,7 +1161,7 @@ verify_task19() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task20() {
   TASK_NUMBER="20"
 
@@ -1218,7 +1218,7 @@ verify_task20() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task21() {
   TASK_NUMBER="21"
 
@@ -1286,7 +1286,7 @@ verify_task21() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task22() {
   TASK_NUMBER="22"
 
@@ -1394,7 +1394,7 @@ verify_task22() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task23() {
   TASK_NUMBER="23"
 

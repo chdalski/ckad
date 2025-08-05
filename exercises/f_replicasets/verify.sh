@@ -3,7 +3,7 @@
 # shellcheck source=../../.scripts/verify.sh
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task1() {
   TASK_NUMBER="1"
 
@@ -99,7 +99,7 @@ verify_task1() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task2() {
   TASK_NUMBER="2"
 
@@ -225,7 +225,7 @@ verify_task2() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task3() {
   TASK_NUMBER="3"
 
@@ -379,7 +379,7 @@ verify_task3() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task4() {
   TASK_NUMBER="4"
 
@@ -532,7 +532,7 @@ verify_task4() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task5() {
   TASK_NUMBER="5"
 
@@ -690,7 +690,7 @@ verify_task5() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task6() {
   TASK_NUMBER="6"
 
@@ -878,7 +878,7 @@ verify_task6() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task7() {
   TASK_NUMBER="7"
 
@@ -1017,7 +1017,7 @@ verify_task7() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task8() {
   TASK_NUMBER="8"
 
@@ -1119,7 +1119,7 @@ verify_task8() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task9() {
   TASK_NUMBER="9"
 

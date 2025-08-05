@@ -3,7 +3,7 @@
 # shellcheck source=../../.scripts/verify.sh
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task1() {
   TASK_NUMBER="1"
   local expected_deploy_name="internal-api"
@@ -197,7 +197,7 @@ verify_task1() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task2() {
   TASK_NUMBER="2"
   local expected_namespace="net-policy"
@@ -411,7 +411,7 @@ verify_task2() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task3() {
   TASK_NUMBER="3"
   local expected_namespace="netpol-demo1"
@@ -616,7 +616,7 @@ verify_task3() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task4() {
   TASK_NUMBER="4"
   local expected_namespace="netpol-demo2"
@@ -795,7 +795,7 @@ verify_task4() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task5() {
   TASK_NUMBER="5"
   local expected_namespace="netpol-demo3"
@@ -922,7 +922,7 @@ verify_task5() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task6() {
   TASK_NUMBER="6"
   local expected_namespace="netpol-demo4"
@@ -1113,7 +1113,7 @@ verify_task6() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task7() {
   TASK_NUMBER="7"
   local expected_namespace="netpol-demo5"
@@ -1309,7 +1309,7 @@ verify_task7() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task8() {
   # Non-local variable for task number
   TASK_NUMBER="8"
@@ -1489,7 +1489,7 @@ verify_task8() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task9() {
   TASK_NUMBER="9"
   local namespace="netpol-demo7"
@@ -1632,7 +1632,7 @@ verify_task9() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task10() {
   TASK_NUMBER="10"
   local namespace="netpol-demo8"
@@ -1771,7 +1771,7 @@ verify_task10() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task12() {
   TASK_NUMBER="12"
   local namespace="netpol-demo10"

@@ -3,7 +3,7 @@
 # shellcheck source=../../.scripts/verify.sh
 source "$(git rev-parse --show-toplevel)/.scripts/verify.sh"
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task1() {
   TASK_NUMBER="1"
   local expected_deploy_name="web-deploy"
@@ -107,7 +107,7 @@ verify_task1() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task2() {
   TASK_NUMBER="2"
   local expected_deploy_name="api-deploy"
@@ -223,7 +223,7 @@ verify_task2() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task3() {
   TASK_NUMBER="3"
   local expected_statefulset_name="db-set"
@@ -315,7 +315,7 @@ verify_task3() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task4() {
   TASK_NUMBER="4"
   local expected_service_name="external-svc"
@@ -362,7 +362,7 @@ verify_task4() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task5() {
   TASK_NUMBER="5"
   local expected_deploy_name="custom-app"
@@ -485,7 +485,7 @@ verify_task5() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task6() {
   TASK_NUMBER="6"
   local expected_deploy_name="multi-port-app"
@@ -606,7 +606,7 @@ verify_task6() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task7() {
   TASK_NUMBER="7"
   local expected_deploy_name="session-app"
@@ -725,7 +725,7 @@ verify_task7() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task8() {
   TASK_NUMBER="8"
   local expected_deploy_name="payment-api"
@@ -860,7 +860,7 @@ verify_task8() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task9() {
   TASK_NUMBER="9"
   local expected_deploy_name="audit-logger"
@@ -983,7 +983,7 @@ verify_task9() {
   return
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329
 verify_task10() {
   TASK_NUMBER="10"
   local expected_namespace="dns-test"

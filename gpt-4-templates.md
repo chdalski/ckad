@@ -2,15 +2,17 @@
 
 ## Create a set of tasks
 
-Create an exhaustive set of challenging, real-world Kubernetes CKAD exam tasks for the topic "NetworkPolicies" as a raw-markdown file.
+Create an exhaustive set of challenging, real-world Kubernetes CKAD exam tasks for the topic "Custom Resource Definitions" as raw-markdown file.
 
-- Use different names per task and always specify which image to use.
+- Use different names per task
+- Explicitly specify which image to use (if one is needed)
 - Use the following template for each task.
 - Each task should include:
 - A unique task number and name.
-- An Objective section describing the goal.
-- A Requirements section as a bullet list.
-- A Predefined Resources: section as YAML manifests (if any).
+- An "__Objective__:" section describing the goal.
+- A "Requirements:" section as a bullet list.
+- A "__Predefined Resources:__" section (if any).
+  - For resources that needs to be created in advance define the manifest using start-tag "---yaml-start" and end-tag "---yaml-end
 - A collapsible help section using <details><summary>help</summary></details>.
 
 ## Create a verification function for a task
@@ -21,7 +23,7 @@ I'll give you a set of CKAD tasks and I'd like you to create a set of verificati
 
 This following definition outlines the mandatory rules and best practices for creating bash verification scripts for CKAD tasks. Please adhere to these specifications ensures consistency, robustness, and clear debugging output.
 
-- Disable shellcheck SC2317 for the function (# shellcheck disable=SC2317)
+- Disable shellcheck SC2329 for the function (# shellcheck disable=SC2329)
 - The function name should follow the pattern "verify_task<tasknumber>"
 - At the beginning of the function create a non-local variable TASK_NUMBER="<tasknumber>".
 - Next, create local variables with predefined values after the TASK_NUMBER.
