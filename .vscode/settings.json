@@ -11,7 +11,9 @@
     "--external-sources"
   ],
   "cSpell.ignoreWords": [
+    "Anson",
     "Autoenv",
+    "Buildx",
     "CKAD",
     "DRYJ",
     "DRYY",
@@ -55,6 +57,7 @@
     "podname",
     "podslog",
     "postgresdb",
+    "qdrant",
     "replicaset",
     "replicasets",
     "resourcequota",
@@ -66,10 +69,12 @@
     "shellcheck",
     "shortnames",
     "tasknumber",
+    "timonwong",
     "tolerations",
     "toplevel",
     "tostring",
     "traefik",
+    "untar",
     "vimrc"
   ],
   "cSpell.words": [
@@ -77,11 +82,12 @@
     "apigroup",
     "clusterrole",
     "clusterrolebinding",
+    "kustomization",
     "rolebinding",
     "serviceaccount",
     "statefulset",
     "storageclasses",
     "subresource",
     "Subresources"
-  ]
+  ],
 }
