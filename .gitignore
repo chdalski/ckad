@@ -1,5 +1,6 @@
 # ckad exercises
 /exercises/**/*.*
+/exercises/**/**
 !exercises/**/.env.**
 !exercises/**/verify.sh
 !exercises/**/README.md

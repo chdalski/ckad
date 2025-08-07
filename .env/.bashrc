@@ -138,6 +138,9 @@ fi
 # custom aliases
 alias ll='ls -l'
 
+# kind completion
+source <(kind completion bash)
+
 # kubernetes configuration
 source <(kubectl completion bash)
 alias k=kubectl
